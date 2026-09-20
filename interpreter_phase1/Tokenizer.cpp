@@ -114,16 +114,33 @@ Token Tokenizer::getToken() {
         }
         token.markAsEof();
     } else {
-        char character;
+        char character, peekChar;
         getCharacter(character);
 
         if (isDigit(character)) {
             token.setIntegerValue(readInteger(character));
-        } else if (character == '=' || character == '+' || character == '-' ||
+        } else if (character == ';' || character == '+' || character == '-' ||
                    character == '*' || character == '/' || character == '%' ||
-                   character == ';' || character == '(' || character == ')') {
+                   character == ')' || character == '(' || character == '{' ||
+		   character == '}') {
             token.setSymbol(character);
-        } else if (isIdentifierStart(character)) {
+        } else if (character == '=' || character == '>' || character == '<') {
+		peekChar = static_cast<char>(inputStream.peek());
+		if (peekChar == '=') {
+			token.setSymbol(character, peekChar);
+		} else {
+			token.setSymbol(character);
+		}
+	} else if (character == '!'){
+		peekChar = static_cast<char>(inputStream.peek());
+		if (peekChar == '=') {
+			token.setSymbol(character, peekChar);
+		} else {
+			std::cerr << "Error: lone bang symbol at line " << token.lineNumber()
+				  << ", column " << token.columnNumber() << ".\n";
+			std::exit(EXIT_FAILURE);
+		}
+	} else if (isIdentifierStart(character)) {
             std::string identifier = readIdentifier(character);
             if (identifier == "for")
                 token.setKeyword(Keyword::forKeyword);

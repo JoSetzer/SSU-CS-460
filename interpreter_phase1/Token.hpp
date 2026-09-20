@@ -26,18 +26,27 @@ public:
     [[nodiscard]] std::size_t lineNumber() const { return _lineNumber; }
     [[nodiscard]] std::size_t columnNumber() const { return _columnNumber; }
 
-    void setSymbol(char symbol) { _symbol = symbol; }
-    [[nodiscard]] char symbol() const { return _symbol; }
+    void setSymbol(char symbol) { _symbol[0] = symbol; }
+    void setSymbol(char firstSymbol, char secondSymbol) { _symbol[0] = firstSymbol; _symbol[1] = secondSymbol;}
+    [[nodiscard]] const char *symbol() const { return _symbol; }
 
-    [[nodiscard]] bool isOpenParen() const { return _symbol == '('; }
-    [[nodiscard]] bool isCloseParen() const { return _symbol == ')'; }
-    [[nodiscard]] bool isSemicolon() const { return _symbol == ';'; }
-    [[nodiscard]] bool isAssignmentOperator() const { return _symbol == '='; }
-    [[nodiscard]] bool isMultiplicationOperator() const { return _symbol == '*'; }
-    [[nodiscard]] bool isAdditionOperator() const { return _symbol == '+'; }
-    [[nodiscard]] bool isSubtractionOperator() const { return _symbol == '-'; }
-    [[nodiscard]] bool isModuloOperator() const { return _symbol == '%'; }
-    [[nodiscard]] bool isDivisionOperator() const { return _symbol == '/'; }
+    [[nodiscard]] bool isOpenParen() const { return _symbol[0] == '('; }
+    [[nodiscard]] bool isCloseParen() const { return _symbol[0] == ')'; }
+    [[nodiscard]] bool isOpenBrace() const { return _symbol[0] == '{'; }
+    [[nodiscard]] bool isCloseBrace() const { return _symbol[0] == '}'; }
+    [[nodiscard]] bool isSemicolon() const { return _symbol[0] == ';'; }
+    [[nodiscard]] bool isAssignmentOperator() const { return (_symbol[0] == '=')&&(_symbol[1] != '='); }
+    [[nodiscard]] bool isCompareOperator() const { return (_symbol[0] == '=')&&(_symbol[1] == '='); }
+    [[nodiscard]] bool isMultiplicationOperator() const { return _symbol[0] == '*'; }
+    [[nodiscard]] bool isAdditionOperator() const { return _symbol[0] == '+'; }
+    [[nodiscard]] bool isSubtractionOperator() const { return _symbol[0] == '-'; }
+    [[nodiscard]] bool isModuloOperator() const { return _symbol[0] == '%'; }
+    [[nodiscard]] bool isDivisionOperator() const { return _symbol[0] == '/'; }
+    [[nodiscard]] bool isGreaterThanOperator() const { return (_symbol[0] == '>')&&(_symbol[1] != '='); }
+    [[nodiscard]] bool isGreaterThanOrEqualOperator() const { return (_symbol[0] == '>')&&(_symbol[1] == '='); }
+    [[nodiscard]] bool isLessThanOperator() const { return (_symbol[0] == '<')&&(_symbol[1] != '='); }
+    [[nodiscard]] bool isLessThanOrEqualOperator() const { return (_symbol[0] == '<')&&(_symbol[1] == '='); }
+    [[nodiscard]] bool isNotEqualOperator() const { return (_symbol[0] == '!')&&(_symbol[1] == '='); }
 
     void setIdentifier(std::string identifier) { _identifier = std::move(identifier); }
     [[nodiscard]] bool isIdentifier() const { return !_identifier.empty(); }
@@ -64,7 +73,7 @@ private:
     bool _eof{false};
     bool _newline{false};
     bool _isInteger{false};
-    char _symbol{'\0'};
+    char _symbol[2]{'\0','\0'};
     int _integerValue{0};
     std::size_t _lineNumber{0};
     std::size_t _columnNumber{0};
