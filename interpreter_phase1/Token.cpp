@@ -15,8 +15,14 @@ void Token::print(std::ostream &output) const {
         output << '(';
     else if (isCloseParen())
         output << ')';
+    else if (isOpenBrace())
+        output << '{';
+    else if (isCloseBrace())
+        output << '}';
     else if (isAssignmentOperator())
         output << " = ";
+    else if (isCompareOperator())
+	output << " == ";
     else if (isSemicolon())
         output << ';';
     else if (isMultiplicationOperator())
@@ -29,6 +35,16 @@ void Token::print(std::ostream &output) const {
         output << " % ";
     else if (isDivisionOperator())
         output << " / ";
+    else if (isGreaterThanOperator())
+        output << " > ";
+    else if (isGreaterThanOrEqualOperator())
+        output << " >= ";
+    else if (isLessThanOperator())
+        output << " < ";
+    else if (isLessThanOrEqualOperator())
+        output << " <= ";
+    else if (isNotEqualOperator())
+        output << " != ";
     else if (isIdentifier())
         output << identifier();
     else if (isInteger())
