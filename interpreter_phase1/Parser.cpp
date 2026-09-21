@@ -91,13 +91,41 @@ AssignmentStatement *Parser::assignmentStatement() {
 ExprNode *Parser::relExpr() {
     // <rel-expr> -> <rel-term> [ <equality-op> <rel-term> ]
     // The optional equality operation is left for students to implement.
-    return relTerm();
+	ExprNode* left = relTerm();
+	Token token = tokenizer.getToken();
+    	
+	if (token.isCompareOperator() || token.isNotEqualOperator()){
+		ExprNode *right = relTerm();
+		left = new BinaryExprNode(token, left, right);
+		token = tokenizer.getToken();
+	}	
+	if (token.isCompareOperator() || token.isNotEqualOperator()){
+            die("Parser::relExpr", "too many equality-ops", token);
+	}
+
+	tokenizer.ungetToken();
+	return left;
 }
 
 ExprNode *Parser::relTerm() {
     // <rel-term> -> <rel-primary> [ <ordering-op> <rel-primary> ]
     // The optional ordering operation is left for students to implement.
-    return relPrimary();
+	ExprNode* left = relPrimary();
+	Token token = tokenizer.getToken();
+	
+	if (token.isGreaterThanOperator() || token.isGreaterThanOrEqualOperator() ||
+	    token.isLessThanOperator() || token.isLessThanOrEqualOperator()) {
+		ExprNode *right = relPrimary();
+		left = new BinaryExprNode(token, left, right);
+		token = tokenizer.getToken();
+	}
+	if (token.isGreaterThanOperator() || token.isGreaterThanOrEqualOperator() ||
+	    token.isLessThanOperator() || token.isLessThanOrEqualOperator()) {
+            die("Parser::relTerm", "too many ordering-ops", token);
+	}
+
+	tokenizer.ungetToken();
+       	return left;
 }
 
 ExprNode *Parser::relPrimary() {

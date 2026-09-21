@@ -31,6 +31,18 @@ int BinaryExprNode::evaluate(const SymbolTable &symbolTable) const {
         return leftValue - rightValue;
     if (token().isMultiplicationOperator())
         return leftValue * rightValue;
+    if (token().isCompareOperator())
+        return leftValue == rightValue;
+    if (token().isNotEqualOperator())
+        return leftValue != rightValue;
+    if (token().isGreaterThanOperator())
+        return leftValue > rightValue;
+    if (token().isGreaterThanOrEqualOperator())
+        return leftValue >= rightValue;
+    if (token().isLessThanOperator())
+        return leftValue < rightValue;
+    if (token().isLessThanOrEqualOperator())
+        return leftValue <= rightValue;
     if (token().isDivisionOperator()) {
         if (rightValue == 0)
             throw std::runtime_error(
