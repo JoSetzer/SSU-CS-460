@@ -67,9 +67,9 @@ Statement *Parser::statement() {
     }
     if (token.isForKeyword())
         die("Parser::statement", "for-statements are not implemented in the base interpreter", token);
-    if (token.isPrintKeyword())
-        die("Parser::statement", "print-statements are not implemented in the base interpreter", token);
-
+    if (token.isPrintKeyword()) {
+        return new PrintStatement(relExpr());
+    }
     die("Parser::statement", "expected a statement", token);
 }
 
