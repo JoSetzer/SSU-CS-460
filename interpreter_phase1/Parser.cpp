@@ -66,10 +66,10 @@ Statement *Parser::statement() {
         return assignmentStatement();
     }
     if (token.isForKeyword())
-        die("Parser::statement", "for-statements are not implemented in the base interpreter", token);
-    if (token.isPrintKeyword())
-        die("Parser::statement", "print-statements are not implemented in the base interpreter", token);
-
+        return forStatement();
+    if (token.isPrintKeyword()) {
+        return new PrintStatement(relExpr());
+    }
     die("Parser::statement", "expected a statement", token);
 }
 
@@ -86,6 +86,54 @@ AssignmentStatement *Parser::assignmentStatement() {
         die("Parser::assignmentStatement", "expected '='", assignmentOperator);
 
     return new AssignmentStatement(variable.identifier(), relExpr());
+}
+
+ForStatement* Parser::forStatement() {
+    Token openParen = tokenizer.getToken();
+
+    if (!openParen.isOpenParen()) {
+        die("Parser::forStatement", "expected '(", openParen);
+    }
+    AssignmentStatement* initializer = assignmentStatement();
+
+    Token semiCol = tokenizer.getToken();
+
+    if (!semiCol.isSemicolon()) {
+        die("Parser::forStatement", "expected ';'", semiCol);
+    }
+
+    ExprNode* condition = relExpr();
+
+    Token semiCol2 = tokenizer.getToken();
+    if (!semiCol2.isSemicolon()) {
+        die("Parser::forStatement", "expected ';'", semiCol2);
+    }
+
+    AssignmentStatement* update = assignmentStatement();
+
+    Token endParen = tokenizer.getToken();
+    if (!endParen.isCloseParen()) {
+        die("Parser::forStatement", "expected ')'", endParen);
+    }
+
+    Token openBrace = tokenizer.getToken();
+    if (!openBrace.isOpenBrace()) {
+        die("Parser::forStatement", "expected '{'", openBrace);
+    }
+
+    Token newLine = tokenizer.getToken();
+    if (!newLine.isNewline()) {
+        die("Parser::forStatement", "expected ''", newLine);
+    }
+
+    Statements* body = statements();
+
+    Token closeBrace = tokenizer.getToken();
+    if (!closeBrace.isCloseBrace()) {
+        die("Parser::forStatement", "expected '}'", closeBrace);
+    }
+
+    return new ForStatement(initializer, condition, update, body);
 }
 
 ExprNode *Parser::relExpr() {
