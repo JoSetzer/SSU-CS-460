@@ -91,7 +91,7 @@ AssignmentStatement *Parser::assignmentStatement() {
 ExprNode *Parser::relExpr() {
     // <rel-expr> -> <rel-term> [ <equality-op> <rel-term> ]
     // The optional equality operation is left for students to implement.
-	ExpNode* left = relTerm();
+	ExprNode* left = relTerm();
 	Token token = tokenizer.getToken();
     	
 	if (token.isCompareOperator() || token.isNotEqualOperator()){
@@ -110,7 +110,7 @@ ExprNode *Parser::relExpr() {
 ExprNode *Parser::relTerm() {
     // <rel-term> -> <rel-primary> [ <ordering-op> <rel-primary> ]
     // The optional ordering operation is left for students to implement.
-	ExpNode* left = relPrimary();
+	ExprNode* left = relPrimary();
 	Token token = tokenizer.getToken();
 	
 	if (token.isGreaterThanOperator() || token.isGreaterThanOrEqualOperator() ||
