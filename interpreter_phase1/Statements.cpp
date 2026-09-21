@@ -59,3 +59,35 @@ void PrintStatement::print() const {
     expression->print();
     std::cout << '\n';
 }
+
+ForStatement::ForStatement(AssignmentStatement* initializer, ExprNode* condition, AssignmentStatement* update, Statements* body) {
+    this->initializer = initializer;
+    this->condition = condition;
+    this->update = update;
+    this->body = body;
+}
+
+ForStatement::~ForStatement() {
+    delete initializer;
+    delete condition;
+    delete update;
+    delete body;
+}
+
+void ForStatement::evaluate(SymbolTable &symbolTable) const {
+    for (initializer->evaluate(symbolTable); condition->evaluate(symbolTable) != 0; update->evaluate(symbolTable)) {
+        body->evaluate(symbolTable);
+    }
+}
+
+void ForStatement::print() const {
+    std::cout << "for (";
+    initializer->print();
+    std::cout << "; ";
+    condition->print();
+    std::cout << "; ";
+    update->print();
+    std::cout << ") {\n";
+    body->print();
+    std::cout << "\n}\n";
+}
