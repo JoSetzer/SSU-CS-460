@@ -125,15 +125,17 @@ Token Tokenizer::getToken() {
 		   character == '}') {
             token.setSymbol(character);
         } else if (character == '=' || character == '>' || character == '<') {
-		peekChar = static_cast<char>(inputStream.peek());
-		if (peekChar == '=') {
+		//peekChar = static_cast<char>(inputStream.peek());
+		if (static_cast<char>(inputStream.peek()) == '=') {
+			getCharacter(peekChar);
 			token.setSymbol(character, peekChar);
 		} else {
 			token.setSymbol(character);
 		}
 	} else if (character == '!'){
-		peekChar = static_cast<char>(inputStream.peek());
-		if (peekChar == '=') {
+		//peekChar = static_cast<char>(inputStream.peek());
+		if (static_cast<char>(inputStream.peek()) == '=') {
+			getCharacter(peekChar);
 			token.setSymbol(character, peekChar);
 		} else {
 			std::cerr << "Error: lone bang symbol at line " << token.lineNumber()
