@@ -31,23 +31,17 @@ Statements *Parser::statements() {
     auto *parsedStatements = new Statements();
     parsedStatements->addStatement(statement());
 
-    Token newline = tokenizer.getToken();
-    if (!newline.isNewline()) {
-        delete parsedStatements;
-        die("Parser::statements", "expected NEWLINE after statement", newline);
-    }
+    // Token newline = tokenizer.getToken();
+    // if (!newline.isNewline()) {
+    //     delete parsedStatements;
+    //     die("Parser::statements", "expected NEWLINE after statement", newline);
+    // }
+
 
     Token next = tokenizer.getToken();
-    while (next.isIdentifier() || next.isKeyword()) {
+    while (!next.isDedent() && !next.isEof()) {
         tokenizer.ungetToken();
         parsedStatements->addStatement(statement());
-
-        newline = tokenizer.getToken();
-        if (!newline.isNewline()) {
-            delete parsedStatements;
-            die("Parser::statements", "expected NEWLINE after statement", newline);
-        }
-
         next = tokenizer.getToken();
     }
 
@@ -63,15 +57,56 @@ Statement *Parser::statement() {
 
     if (token.isIdentifier()) {
         tokenizer.ungetToken();
-        return assignmentStatement();
+        Statement* assignment = assignmentStatement();
+
+        Token newline = tokenizer.getToken();
+        if (!newline.isNewline())
+            die("Parser::statement", "expected NEWLINE after statement", newline);
+
+        return assignment;
     }
     if (token.isForKeyword())
         return forStatement();
+
     if (token.isPrintKeyword()) {
-        return new PrintStatement(relExpr());
+        Statement* print = new PrintStatement(relExpr());
+
+        Token newline = tokenizer.getToken();
+        if (!newline.isNewline())
+            die("Parser::statement", "expected NEWLINE after statement", newline);
+
+        return print;
     }
+
+    if (token.isIndent()) {
+        die("Parser::statement", "unexpected INDENT", token);
+    }
+
     die("Parser::statement", "expected a statement", token);
 }
+
+Statements *Parser::suite() {
+    Token token = tokenizer.getToken();
+
+    if (!token.isNewline()) {
+        die("Parser::suite", "expected NEWLINE", token);
+    }
+
+    token = tokenizer.getToken();
+    if (!token.isIndent()) {
+        die("Parser::suite", "expected INDENT", token);
+    }
+
+    Statements *body = statements();
+
+    token = tokenizer.getToken();
+    if (!token.isDedent()) {
+        die("Parser::suite", "expected DEDENT", token);
+    }
+
+    return body;
+}
+
 
 AssignmentStatement *Parser::assignmentStatement() {
     // <assignment-statement> -> <id> = <rel-expr>
@@ -116,22 +151,29 @@ ForStatement* Parser::forStatement() {
         die("Parser::forStatement", "expected ')'", endParen);
     }
 
-    Token openBrace = tokenizer.getToken();
-    if (!openBrace.isOpenBrace()) {
-        die("Parser::forStatement", "expected '{'", openBrace);
+    Token colon = tokenizer.getToken();
+    if (!colon.isColon()) {
+        die("Parser::forStatement", "expected ':'", colon);
     }
 
-    Token newLine = tokenizer.getToken();
-    if (!newLine.isNewline()) {
-        die("Parser::forStatement", "expected ''", newLine);
-    }
+    Statements* body = suite();
 
-    Statements* body = statements();
-
-    Token closeBrace = tokenizer.getToken();
-    if (!closeBrace.isCloseBrace()) {
-        die("Parser::forStatement", "expected '}'", closeBrace);
-    }
+    // Token openBrace = tokenizer.getToken();
+    // if (!openBrace.isOpenBrace()) {
+    //     die("Parser::forStatement", "expected '{'", openBrace);
+    // }
+    //
+    // Token newLine = tokenizer.getToken();
+    // if (!newLine.isNewline()) {
+    //     die("Parser::forStatement", "expected ''", newLine);
+    // }
+    //
+    // Statements* body = statements();
+    //
+    // Token closeBrace = tokenizer.getToken();
+    // if (!closeBrace.isCloseBrace()) {
+    //     die("Parser::forStatement", "expected '}'", closeBrace);
+    // }
 
     return new ForStatement(initializer, condition, update, body);
 }

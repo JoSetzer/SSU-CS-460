@@ -75,8 +75,22 @@ Token Tokenizer::getToken() {
         return lastToken;
     }
 
+    if (dedentCount > 0) {
+        dedentCount--;
+        Token token;
+        token.setLocation(lineNumber, columnNumber);
+        token.markAsDedent();
+        tokens.push_back(token);
+        return lastToken = token;
+    }
+
     while (inputStream.peek() != std::char_traits<char>::eof()) {
         char character = static_cast<char>(inputStream.peek());
+
+        if (character == '\t' && !lineContainsToken) {
+            std::cerr << "Error: Tab is not allowed.\n";
+            std::exit(EXIT_FAILURE);
+        }
 
         if (isDiscardedWhitespace(character)) {
             getCharacter(character);
@@ -101,6 +115,38 @@ Token Tokenizer::getToken() {
             continue;
         }
 
+        if (!lineContainsToken) {
+            int indent = columnNumber - 1;
+            Token token;
+            token.setLocation(lineNumber, columnNumber);
+
+            if (indent > indentStack.back()) {
+                indentStack.push_back(indent);
+                lineContainsToken = true;
+
+                token.markAsIndent();
+                tokens.push_back(token);
+                return lastToken = token;
+
+            }
+            else if (indent < indentStack.back()) {
+                while (indentStack.back() > indent) {
+                    indentStack.pop_back();
+                    dedentCount++;
+                }
+                if (indentStack.back() != indent) {
+                    std::cerr << "Error: DEDENT at line " << token.lineNumber()
+                  << ", column " << token.columnNumber() << ".\n";
+                    std::exit(EXIT_FAILURE);
+                }
+                lineContainsToken = true;
+                dedentCount--;
+                token.markAsDedent();
+                tokens.push_back(token);
+                return lastToken = token;
+            }
+        }
+
         break;
     }
 
@@ -112,6 +158,23 @@ Token Tokenizer::getToken() {
             std::cerr << "Error while reading the input stream in Tokenizer.\n";
             std::exit(EXIT_FAILURE);
         }
+        if (lineContainsToken) {
+            token.markAsNewline();
+            tokens.push_back(token);
+            lineContainsToken = false;
+            return lastToken = token;
+        }
+        if (indentStack.back() > 0) {
+            while (indentStack.back() > 0) {
+                indentStack.pop_back();
+                dedentCount++;
+            }
+            token.markAsDedent();
+            tokens.push_back(token);
+            dedentCount--;
+            return lastToken = token;
+        }
+
         token.markAsEof();
     } else {
         char character, peekChar;
@@ -122,7 +185,7 @@ Token Tokenizer::getToken() {
         } else if (character == ';' || character == '+' || character == '-' ||
                    character == '*' || character == '/' || character == '%' ||
                    character == ')' || character == '(' || character == '{' ||
-		   character == '}') {
+                   character == '}' || character == ':') {
             token.setSymbol(character);
         } else if (character == '=' || character == '>' || character == '<') {
 		//peekChar = static_cast<char>(inputStream.peek());

@@ -49,6 +49,13 @@ void Token::print(std::ostream &output) const {
         output << identifier();
     else if (isInteger())
         output << integerValue();
+    else if (isIndent())
+        output << "INDENT";
+    else if (isDedent())
+        output << "DEDENT";
+    else if (isColon()) {
+        output << ":";
+    }
     else
         output << "uninitialized token";
 }
