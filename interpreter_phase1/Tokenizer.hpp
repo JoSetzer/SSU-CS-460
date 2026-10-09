@@ -22,6 +22,8 @@ private:
     bool ungottenToken{false};
     std::ifstream &inputStream;
     std::vector<Token> tokens{};
+    std::vector<int> indentStack{0};
+    int dedentCount{0};
     std::size_t lineNumber{1};
     std::size_t columnNumber{1};
     bool lineContainsToken{false};

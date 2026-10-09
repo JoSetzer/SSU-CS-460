@@ -18,6 +18,10 @@ public:
     [[nodiscard]] bool isNewline() const { return _newline; }
     void markAsEof() { _eof = true; }
     void markAsNewline() { _newline = true; }
+    [[nodiscard]] bool isIndent() const {return _isIndent;}
+    [[nodiscard]] bool isDedent() const {return _isDedent;}
+    void markAsIndent() { _isIndent = true; }
+    void markAsDedent() { _isDedent = true; }
 
     void setLocation(std::size_t line, std::size_t column) {
         _lineNumber = line;
@@ -47,6 +51,7 @@ public:
     [[nodiscard]] bool isLessThanOperator() const { return (_symbol[0] == '<')&&(_symbol[1] != '='); }
     [[nodiscard]] bool isLessThanOrEqualOperator() const { return (_symbol[0] == '<')&&(_symbol[1] == '='); }
     [[nodiscard]] bool isNotEqualOperator() const { return (_symbol[0] == '!')&&(_symbol[1] == '='); }
+    [[nodiscard]] bool isColon() const { return _symbol[0] == ':'; }
 
     void setIdentifier(std::string identifier) { _identifier = std::move(identifier); }
     [[nodiscard]] bool isIdentifier() const { return !_identifier.empty(); }
@@ -73,6 +78,8 @@ private:
     bool _eof{false};
     bool _newline{false};
     bool _isInteger{false};
+    bool _isIndent{false};
+    bool _isDedent{false};
     char _symbol[2]{'\0','\0'};
     int _integerValue{0};
     std::size_t _lineNumber{0};
