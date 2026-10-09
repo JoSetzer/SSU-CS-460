@@ -5,12 +5,15 @@ Team Members:
 
 Contributions:
 *Julian Contreras:
-- Implemented For loop statements
+- Implemented Original C++ For loop statements
 - Implemented Print statements
+- Implemented Indent and Dedent
 
 *Jonas Setzer:
 - Added relational operators to token and tokenizer
-- Updated parser class with real expressions and real terms functions	
+- Updated parser class with real expressions and real terms functions
+- Converted C++ for loop implementation to Python style for loop
+- Implemented range() function
 
 AI Use:
 * No AI was used at any stage in development
