@@ -21,6 +21,7 @@ void Statements::print() const {
 void Statements::evaluate(SymbolTable &symbolTable) const {
     for (const auto *statement : statements)
         statement->evaluate(symbolTable);
+
 }
 
 AssignmentStatement::AssignmentStatement(
@@ -78,7 +79,7 @@ void ForStatement::evaluate(SymbolTable &symbolTable) const {
 		return;
 
 	int nextValue = evaluated.start();
-
+	std::cout << nextValue;
 	while (true) {
 		symbolTable.setValueFor(itterVar, nextValue);
 

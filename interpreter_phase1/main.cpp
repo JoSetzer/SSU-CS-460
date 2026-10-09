@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 
     SymbolTable symbolTable;
     try {
-        statements->evaluate(symbolTable);
+	statements->evaluate(symbolTable);
     } catch (const std::exception &error) {
         std::cerr << "Runtime error: " << error.what() << '\n';
         delete statements;

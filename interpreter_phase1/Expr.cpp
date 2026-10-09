@@ -130,8 +130,8 @@ bool EvaluatedRange::hasIteration() const {
 
 bool EvaluatedRange::shouldContinue (int nextValue) const {
 	if (step_ > 0)
-		return nextValue > stop_;
-	return nextValue < stop_;
+		return nextValue < stop_;
+	return nextValue > stop_;
 }
 
 RangeExpression::RangeExpression(ExprNode *stop):
@@ -161,25 +161,19 @@ RangeExpression::~RangeExpression(){
 }
 
 EvaluatedRange RangeExpression::evaluate(const SymbolTable& symbolTable) const {
-	int start, step, stop;
-
-	if (startExpression == NULL) {
-		start = 0;
-	}
-	else {
+	int start = 0;
+	int step = 1;
+	if (startExpression != nullptr) {
 		start = startExpression->evaluate(symbolTable);
 	}
 
-	if (stepExpression == NULL) {
-		step = 1;
-	}
-	else {
+	if (stepExpression != nullptr) {
 		step = stepExpression->evaluate(symbolTable);
 	}
 
-	stop = stopExpression->evaluate(symbolTable);
+	int stop = stopExpression->evaluate(symbolTable);
 
-	return EvaluatedRange(start, step, stop);	
+	return EvaluatedRange(start, stop, step);	
 }
 
 void RangeExpression::print(std::ostream& output) const {
