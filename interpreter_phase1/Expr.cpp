@@ -109,3 +109,96 @@ void Variable::print() const {
 int Variable::evaluate(const SymbolTable &symbolTable) const {
     return symbolTable.getValueFor(token().identifier());
 }
+
+EvaluatedRange::EvaluatedRange(int start, int stop, int step):
+				start_(start), stop_(stop), step_(step) {
+    	if(step_ == 0)
+		throw std::logic_error("error: zero-value step");
+}
+
+int EvaluatedRange::start() const {return start_;}
+
+int EvaluatedRange::stop() const {return stop_;}
+
+int EvaluatedRange::step() const {return step_;}
+
+bool EvaluatedRange::hasIteration() const {
+	if (step_ > 0)
+		return start_ < stop_;
+	return start_ > stop_;
+}
+
+bool EvaluatedRange::shouldContinue (int nextValue) const {
+	if (step_ > 0)
+		return nextValue > stop_;
+	return nextValue < stop_;
+}
+
+RangeExpression::RangeExpression(ExprNode *stop):
+	startExpression(NULL),
+	stopExpression(stop),
+	stepExpression(NULL)
+	{}
+RangeExpression::RangeExpression(ExprNode *start, ExprNode *stop):
+	startExpression(start),
+	stopExpression(stop),
+	stepExpression(NULL)
+	{}
+RangeExpression::RangeExpression(
+	ExprNode *start,
+	ExprNode *stop,
+	ExprNode *step
+	): 
+	startExpression(start),
+	stopExpression(stop),
+	stepExpression(step)
+	{}
+
+RangeExpression::~RangeExpression(){
+	delete startExpression;
+	delete stopExpression;
+	delete stepExpression;
+}
+
+EvaluatedRange RangeExpression::evaluate(const SymbolTable& symbolTable) const {
+	int start, step, stop;
+
+	if (startExpression == NULL) {
+		start = 0;
+	}
+	else {
+		start = startExpression->evaluate(symbolTable);
+	}
+
+	if (stepExpression == NULL) {
+		step = 1;
+	}
+	else {
+		step = stepExpression->evaluate(symbolTable);
+	}
+
+	stop = stopExpression->evaluate(symbolTable);
+
+	return EvaluatedRange(start, step, stop);	
+}
+
+void RangeExpression::print(std::ostream& output) const {
+    output << "range(";
+
+    if (startExpression == nullptr) {
+        stopExpression->print();
+    }
+    else if (stepExpression == nullptr) {
+        startExpression->print();
+        output << ", ";
+        stopExpression->print();
+    }
+    else {
+        startExpression->print();
+        output << ", ";
+        stopExpression->print();
+        output << ", ";
+        stepExpression->print();
+    }
+    output << ")";
+}

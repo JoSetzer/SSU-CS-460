@@ -60,34 +60,43 @@ void PrintStatement::print() const {
     std::cout << '\n';
 }
 
-ForStatement::ForStatement(AssignmentStatement* initializer, ExprNode* condition, AssignmentStatement* update, Statements* body) {
-    this->initializer = initializer;
-    this->condition = condition;
-    this->update = update;
+ForStatement::ForStatement(std::string itterVar, RangeExpression *range, Statements* body) {
+    this->itterVar = itterVar;
+    this->range = range;
     this->body = body;
 }
 
 ForStatement::~ForStatement() {
-    delete initializer;
-    delete condition;
-    delete update;
+    delete range;
     delete body;
 }
 
 void ForStatement::evaluate(SymbolTable &symbolTable) const {
-    for (initializer->evaluate(symbolTable); condition->evaluate(symbolTable) != 0; update->evaluate(symbolTable)) {
-        body->evaluate(symbolTable);
-    }
-}
+	EvaluatedRange evaluated = range->evaluate(symbolTable);
+
+	if (!evaluated.hasIteration())
+		return;
+
+	int nextValue = evaluated.start();
+
+	while (true) {
+		symbolTable.setValueFor(itterVar, nextValue);
+
+		body->evaluate(symbolTable);
+
+		nextValue += evaluated.step();
+
+		if (!evaluated.shouldContinue(nextValue))
+			break;
+	}
+}	
 
 void ForStatement::print() const {
-    std::cout << "for (";
-    initializer->print();
-    std::cout << "; ";
-    condition->print();
-    std::cout << "; ";
-    update->print();
-    std::cout << ") {\n";
+    std::cout << "for ";
+    std::cout << itterVar;
+    std::cout << " in ";
+    range->print(std::cout);
+    std::cout << ":\n";
     body->print();
-    std::cout << "\n}\n";
+    std::cout << "\n";
 }

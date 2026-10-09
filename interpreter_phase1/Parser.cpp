@@ -123,33 +123,64 @@ AssignmentStatement *Parser::assignmentStatement() {
     return new AssignmentStatement(variable.identifier(), relExpr());
 }
 
+RangeExpression* Parser::range(){
+	Token range = tokenizer.getToken();
+	if (!range.isRangeKeyword())
+		die("Parser::range", "expected range keyword", range);
+
+	Token openParen = tokenizer.getToken();
+	if (!openParen.isOpenParen())
+		die("Parser::range", "expected '('", openParen);
+
+	ExprNode* firstArg = relExpr();
+
+	Token comma = tokenizer.getToken();
+	if (comma.isCloseParen())
+		return new RangeExpression(firstArg);
+	
+	if (!comma.isComma()) {
+		delete firstArg;	
+		die("Parser::range", "expected ',' or ')'", comma);
+	
+	}
+
+	ExprNode* secondArg = relExpr();
+
+	comma = tokenizer.getToken();
+	if (comma.isCloseParen())
+		return new RangeExpression(firstArg, secondArg);
+	
+	if (!comma.isComma()) {
+		delete firstArg;
+		delete secondArg;
+		die("Parser::range", "expected ',' or ')'", comma);
+	}
+
+	ExprNode* thirdArg = relExpr();
+	
+	comma = tokenizer.getToken();
+	if (!comma.isCloseParen()) {
+		delete firstArg;
+		delete secondArg;
+		delete thirdArg;	
+		die("Parser::range", "expected ')'", comma);
+	}
+
+	return new RangeExpression(firstArg, secondArg,	thirdArg);
+}
+
 ForStatement* Parser::forStatement() {
-    Token openParen = tokenizer.getToken();
-
-    if (!openParen.isOpenParen()) {
-        die("Parser::forStatement", "expected '(", openParen);
-    }
-    AssignmentStatement* initializer = assignmentStatement();
-
-    Token semiCol = tokenizer.getToken();
-
-    if (!semiCol.isSemicolon()) {
-        die("Parser::forStatement", "expected ';'", semiCol);
+    Token itterVar = tokenizer.getToken();
+    if (!itterVar.isIdentifier()) {
+        die("Parser::forStatement", "expected itterator variable", itterVar);
     }
 
-    ExprNode* condition = relExpr();
-
-    Token semiCol2 = tokenizer.getToken();
-    if (!semiCol2.isSemicolon()) {
-        die("Parser::forStatement", "expected ';'", semiCol2);
+    Token in = tokenizer.getToken();
+    if (!in.isInKeyword()) {
+        die("Parser::forStatement", "expected 'in'", in);
     }
 
-    AssignmentStatement* update = assignmentStatement();
-
-    Token endParen = tokenizer.getToken();
-    if (!endParen.isCloseParen()) {
-        die("Parser::forStatement", "expected ')'", endParen);
-    }
+    RangeExpression* parsedRange = range();
 
     Token colon = tokenizer.getToken();
     if (!colon.isColon()) {
@@ -158,24 +189,7 @@ ForStatement* Parser::forStatement() {
 
     Statements* body = suite();
 
-    // Token openBrace = tokenizer.getToken();
-    // if (!openBrace.isOpenBrace()) {
-    //     die("Parser::forStatement", "expected '{'", openBrace);
-    // }
-    //
-    // Token newLine = tokenizer.getToken();
-    // if (!newLine.isNewline()) {
-    //     die("Parser::forStatement", "expected ''", newLine);
-    // }
-    //
-    // Statements* body = statements();
-    //
-    // Token closeBrace = tokenizer.getToken();
-    // if (!closeBrace.isCloseBrace()) {
-    //     die("Parser::forStatement", "expected '}'", closeBrace);
-    // }
-
-    return new ForStatement(initializer, condition, update, body);
+    return new ForStatement(itterVar.identifier(), parsedRange, body);
 }
 
 ExprNode *Parser::relExpr() {

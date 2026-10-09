@@ -185,7 +185,7 @@ Token Tokenizer::getToken() {
         } else if (character == ';' || character == '+' || character == '-' ||
                    character == '*' || character == '/' || character == '%' ||
                    character == ')' || character == '(' || character == '{' ||
-                   character == '}' || character == ':') {
+                   character == '}' || character == ':' || character == ',') {
             token.setSymbol(character);
         } else if (character == '=' || character == '>' || character == '<') {
 		//peekChar = static_cast<char>(inputStream.peek());
@@ -211,6 +211,10 @@ Token Tokenizer::getToken() {
                 token.setKeyword(Keyword::forKeyword);
             else if (identifier == "print")
                 token.setKeyword(Keyword::printKeyword);
+            else if (identifier == "in")
+                token.setKeyword(Keyword::inKeyword);
+            else if (identifier == "range")
+                token.setKeyword(Keyword::rangeKeyword);
             else
                 token.setIdentifier(std::move(identifier));
         } else {

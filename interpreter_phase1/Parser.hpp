@@ -18,6 +18,7 @@ public:
     AssignmentStatement *assignmentStatement();
     ForStatement *forStatement();
     Statements *suite();
+    RangeExpression *range();
 
     ExprNode *relExpr();
     ExprNode *relTerm();

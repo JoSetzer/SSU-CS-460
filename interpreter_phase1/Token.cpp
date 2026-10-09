@@ -11,6 +11,10 @@ void Token::print(std::ostream &output) const {
         output << "for";
     else if (isPrintKeyword())
         output << "print";
+    else if (isRangeKeyword())
+	output << "range";
+    else if (isInKeyword())
+	output << "in";
     else if (isOpenParen())
         output << '(';
     else if (isCloseParen())
@@ -55,6 +59,9 @@ void Token::print(std::ostream &output) const {
         output << "DEDENT";
     else if (isColon()) {
         output << ":";
+    }
+    else if (isComma()) {
+        output << ",";
     }
     else
         output << "uninitialized token";

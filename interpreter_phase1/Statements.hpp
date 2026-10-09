@@ -54,15 +54,18 @@ class PrintStatement final : public Statement {
 
 class ForStatement final : public Statement {
     public:
-    ForStatement(AssignmentStatement* initializer, ExprNode* condition, AssignmentStatement* update, Statements* body);
+    // ForStatement(AssignmentStatement* initializer, ExprNode* condition, AssignmentStatement* update, Statements* body);
+    ForStatement(std::string itterVar, RangeExpression *range, Statements* body);
     ~ForStatement() override;
     void evaluate(SymbolTable &symbolTable) const override;
     void print() const override;
 
     private:
-    AssignmentStatement* initializer;
-    ExprNode* condition;
-    AssignmentStatement* update;
+    // AssignmentStatement* initializer;
+    // ExprNode* condition;
+    // AssignmentStatement* update;
+    std::string itterVar;
+    RangeExpression* range;
     Statements* body;
 };
 

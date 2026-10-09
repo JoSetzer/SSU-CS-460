@@ -9,6 +9,8 @@
 enum class Keyword {
     none,
     forKeyword,
+    inKeyword,
+    rangeKeyword,
     printKeyword
 };
 
@@ -52,6 +54,8 @@ public:
     [[nodiscard]] bool isLessThanOrEqualOperator() const { return (_symbol[0] == '<')&&(_symbol[1] == '='); }
     [[nodiscard]] bool isNotEqualOperator() const { return (_symbol[0] == '!')&&(_symbol[1] == '='); }
     [[nodiscard]] bool isColon() const { return _symbol[0] == ':'; }
+    [[nodiscard]] bool isComma() const { return _symbol[0] == ','; }
+
 
     void setIdentifier(std::string identifier) { _identifier = std::move(identifier); }
     [[nodiscard]] bool isIdentifier() const { return !_identifier.empty(); }
@@ -60,6 +64,8 @@ public:
     void setKeyword(Keyword keyword) { _keyword = keyword; }
     [[nodiscard]] bool isKeyword() const { return _keyword != Keyword::none; }
     [[nodiscard]] bool isForKeyword() const { return _keyword == Keyword::forKeyword; }
+    [[nodiscard]] bool isInKeyword() const { return _keyword == Keyword::inKeyword; }
+    [[nodiscard]] bool isRangeKeyword() const { return _keyword == Keyword::rangeKeyword; }
     [[nodiscard]] bool isPrintKeyword() const { return _keyword == Keyword::printKeyword; }
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
