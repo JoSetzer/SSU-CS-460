@@ -79,7 +79,7 @@ void ForStatement::evaluate(SymbolTable &symbolTable) const {
 		return;
 
 	int nextValue = evaluated.start();
-	std::cout << nextValue;
+
 	while (true) {
 		symbolTable.setValueFor(itterVar, nextValue);
 
