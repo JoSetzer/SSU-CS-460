@@ -3,16 +3,18 @@
 
 #include <map>
 #include <string>
+#include "ValueDescriptor.h"
+
 
 class SymbolTable {
 public:
-    void setValueFor(const std::string &variableName, int value);
+    void setValueFor(const std::string &variableName, ValueDescriptor* value);
     [[nodiscard]] bool isDefined(const std::string &variableName) const;
-    [[nodiscard]] int getValueFor(const std::string &variableName) const;
+    [[nodiscard]] ValueDescriptor* getValueFor(const std::string &variableName) const;
     void print() const;
 
 private:
-    std::map<std::string, int> values;
+    std::map<std::string, ValueDescriptor*> values;
 };
 
 #endif // EXPRINTER_SYMBOLTABLE_HPP

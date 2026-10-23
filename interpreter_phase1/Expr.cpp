@@ -21,45 +21,511 @@ BinaryExprNode::~BinaryExprNode() {
     delete rightOperand;
 }
 
-int BinaryExprNode::evaluate(const SymbolTable &symbolTable) const {
-    const int leftValue = leftOperand->evaluate(symbolTable);
-    const int rightValue = rightOperand->evaluate(symbolTable);
+ValueDescriptor *BinaryExprNode::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor* leftValue = leftOperand->evaluate(symbolTable);
+    ValueDescriptor* rightValue = nullptr;
 
-    if (token().isAdditionOperator())
-        return leftValue + rightValue;
-    if (token().isSubtractionOperator())
-        return leftValue - rightValue;
-    if (token().isMultiplicationOperator())
-        return leftValue * rightValue;
-    if (token().isCompareOperator())
-        return leftValue == rightValue;
-    if (token().isNotEqualOperator())
-        return leftValue != rightValue;
-    if (token().isGreaterThanOperator())
-        return leftValue > rightValue;
-    if (token().isGreaterThanOrEqualOperator())
-        return leftValue >= rightValue;
-    if (token().isLessThanOperator())
-        return leftValue < rightValue;
-    if (token().isLessThanOrEqualOperator())
-        return leftValue <= rightValue;
-    if (token().isDivisionOperator()) {
-        if (rightValue == 0)
-            throw std::runtime_error(
-                "division by zero at line " + std::to_string(token().lineNumber()) +
-                ", column " + std::to_string(token().columnNumber()));
-        return leftValue / rightValue;
-    }
-    if (token().isModuloOperator()) {
-        if (rightValue == 0)
-            throw std::runtime_error(
-                "modulo by zero at line " + std::to_string(token().lineNumber()) +
-                ", column " + std::to_string(token().columnNumber()));
-        return leftValue % rightValue;
+    ValueDescriptor *result = nullptr;
+
+    try {
+        rightValue = rightOperand->evaluate(symbolTable);
+
+        if (token().isAdditionOperator())
+            result = additionOperation(leftValue, rightValue);
+        if (token().isSubtractionOperator())
+            result = subtractionOperation(leftValue, rightValue);
+        if (token().isMultiplicationOperator())
+            result = multiplicationOperation(leftValue, rightValue);
+        if (token().isCompareOperator())
+            result = equalsOperation(leftValue, rightValue);
+        if (token().isNotEqualOperator())
+            result = notEqualsOperation(leftValue, rightValue);
+        if (token().isGreaterThanOperator())
+            result = greaterOperation(leftValue, rightValue);
+        if (token().isGreaterThanOrEqualOperator())
+            result = greaterOrEqualsOperation(leftValue, rightValue);
+        if (token().isLessThanOperator())
+            result = lessOperation(leftValue, rightValue);
+        if (token().isLessThanOrEqualOperator())
+            result = lessOrEqualsOperation(leftValue, rightValue);
+        if (token().isDivisionOperator())
+            result = divisionOperation(leftValue, rightValue);
+        if (token().isFloorDivisionOperator())
+            result = floorDivisionOperation(leftValue, rightValue);
+        if (token().isModuloOperator())
+            result = moduloOperation(leftValue, rightValue);
+    } catch (...) {
+        delete leftValue;
+        delete rightValue;
+        throw;
     }
 
-    throw std::logic_error("unsupported infix operator");
+    delete leftValue;
+    delete rightValue;
+    return result;
 }
+
+ValueDescriptor *BinaryExprNode::additionOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+
+    // if both operances are integers
+    if (left->type() == integer && right->type() == integer) {
+            std::int64_t result = static_cast<const IntegerValueDescriptor*>(left)->value() +
+                static_cast<const IntegerValueDescriptor*>(right)->value();
+            return new IntegerValueDescriptor(result);
+        }
+    // one or both operands is a double
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        double result = static_cast<const DoubleValueDescriptor*>(left)->value() + r;
+        return new DoubleValueDescriptor(result);
+    }
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        double result = l + static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        double l = static_cast<const DoubleValueDescriptor*>(left)->value();
+        double r = static_cast<const DoubleValueDescriptor*>(right)->value();
+        double result = l + r;
+        return new DoubleValueDescriptor(result);
+    }
+
+    // One or both operands is a string
+    if (left->type() == stringVal && right->type() == stringVal) {
+        std::string l = static_cast<const StringValueDescriptor*>(left)->value();
+        std::string r = static_cast<const StringValueDescriptor*>(right)->value();
+        std::string result = l + r;
+        return new StringValueDescriptor(result);
+    }
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::subtractionOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+
+    // both operands are integers
+    if (left->type() == integer && right->type() == integer) {
+        std::int64_t result = static_cast<const IntegerValueDescriptor*>(left)->value() -
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new IntegerValueDescriptor(result);
+    }
+    // one or both operands are doubles
+    // integer - double
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        double result = l - static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+    // double - integer
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        double result = static_cast<const DoubleValueDescriptor*>(left)->value() - r;
+        return new DoubleValueDescriptor(result);
+    }
+    // double - double
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        double result = static_cast<const DoubleValueDescriptor*>(left)->value() -
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::multiplicationOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+
+    // integer * integer
+    if (left->type() == integer && right->type() == integer) {
+        std::int64_t result = static_cast<const IntegerValueDescriptor*>(left)->value() *
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new IntegerValueDescriptor(result);
+    }
+    // double * double
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        double result = static_cast<const DoubleValueDescriptor*>(left)->value() *
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+    // integer * double
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        double result = l * static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+    // double * integer
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        double result = static_cast<const DoubleValueDescriptor*>(left)->value() * r;
+        return new DoubleValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::divisionOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+
+    if (right->type() ==integer)
+        if (static_cast<double>(static_cast<const IntegerValueDescriptor*>(right)->value()) == 0.0)
+            throw std::runtime_error("division by zero at line " + std::to_string(token().lineNumber()));
+
+    if (right->type() == doubleVal)
+        if (static_cast<const DoubleValueDescriptor*>(right)->value() == 0.0)
+            throw std::runtime_error("division by zero at line" + std::to_string(token().lineNumber()));
+
+    // integer / integer
+    if (left->type() == integer && right->type() == integer) {
+        double result = static_cast<double>(static_cast<const IntegerValueDescriptor*>(left)->value()) /
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+
+    // double / double
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        double result = static_cast<const DoubleValueDescriptor*>(left)->value() /
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+
+    //integer / double
+    if (left->type() == integer && right->type() == doubleVal) {
+        std::int64_t l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        double result = l / static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new DoubleValueDescriptor(result);
+    }
+
+    // double / integer
+    if (left->type() == doubleVal && right->type() == integer) {
+        std::int64_t r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        double result = static_cast<const DoubleValueDescriptor*>(left)->value() / r;
+        return new DoubleValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::floorDivisionOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+
+    if (right->type() == integer)
+        if (static_cast<const IntegerValueDescriptor*>(right)->value() == 0)
+            throw std::runtime_error("division by zero at line" + std::to_string(token().lineNumber()));
+
+    // integer // integer
+    if (left->type() == integer && right->type() == integer) {
+        std::int64_t l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        std::int64_t r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        std::int64_t result = l / r;
+        std::int64_t remainder = l % r;
+        if (remainder != 0 && ((remainder < 0) != (r < 0)))
+            result -= 1;
+        return new IntegerValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::equalsOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    ValueDescriptor::Type boolVal = ValueDescriptor::Type::boolean;
+    ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+
+    // operands are of the same type
+    if (left->type() == right->type()) {
+        if (left->type() == integer && right->type() == integer) {
+            bool result = static_cast<const IntegerValueDescriptor*>(left)->value() == static_cast<const IntegerValueDescriptor*>(right)->value();
+            return new BooleanValueDescriptor(result);
+        }
+        if (left->type() == doubleVal && right->type() == doubleVal) {
+            bool result = static_cast<const DoubleValueDescriptor*>(left)->value() == static_cast<const DoubleValueDescriptor*>(right)->value();
+            return new BooleanValueDescriptor(result);
+        }
+        if (left->type() == boolVal && right->type() == boolVal) {
+            bool result = static_cast<const BooleanValueDescriptor*>(left)->value() == static_cast<const BooleanValueDescriptor*>(right)->value();
+            return new BooleanValueDescriptor(result);
+        }
+        if (left->type() == stringVal && right->type() == stringVal) {
+            bool result = static_cast<const StringValueDescriptor*>(left)->value() == static_cast<const StringValueDescriptor*>(right)->value();
+            return new BooleanValueDescriptor(result);
+        }
+    }
+
+    //operands are a integer and double
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        bool result = l == static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        bool result = r == static_cast<const DoubleValueDescriptor*>(left)->value();
+        return new BooleanValueDescriptor(result);
+    }
+
+    return new BooleanValueDescriptor(false);
+}
+
+ValueDescriptor *BinaryExprNode::notEqualsOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    ValueDescriptor::Type boolVal = ValueDescriptor::Type::boolean;
+    ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+
+    //integers
+    if (left->type() == integer && right->type() == integer) {
+        bool result = static_cast<const IntegerValueDescriptor*>(left)->value() !=
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // doubles
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() !=
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // booleans
+    if (left->type() == boolVal && right->type() == boolVal) {
+        bool result = static_cast<const BooleanValueDescriptor*>(left)->value() !=
+            static_cast<const BooleanValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // strings
+    if (left->type() == stringVal && right->type() == stringVal) {
+        bool result = static_cast<const StringValueDescriptor*>(left)->value() !=
+            static_cast<const StringValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // doubles and integers
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        bool result = l != static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        bool result = r != static_cast<const DoubleValueDescriptor*>(left)->value();
+        return new BooleanValueDescriptor(result);
+    }
+
+    return new BooleanValueDescriptor(true);
+}
+
+ValueDescriptor *BinaryExprNode::moduloOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+
+    if (right->type() == integer) {
+        if (static_cast<const IntegerValueDescriptor*>(right)->value() == 0) {
+            throw std::runtime_error("division by zero at line " + std::to_string(token().lineNumber()));
+        }
+    }
+
+    // integer % integer
+    if (left->type() == integer && right->type() == integer) {
+        std::int64_t l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        std::int64_t r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        std::int64_t result = l % r;
+        if (result != 0 && ((result < 0) != (r < 0)))
+            result += r;
+        return new IntegerValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::lessOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+
+    // integer < integer
+    if (left->type() == integer && right->type() == integer) {
+        bool result = static_cast<const IntegerValueDescriptor*>(left)->value() <
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < double
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() <
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // integer < double
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        bool result = l < static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < integer
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() < r;
+        return new BooleanValueDescriptor(result);
+    }
+
+    // string < string
+    if (left->type() == stringVal && right->type() == stringVal) {
+        bool result = static_cast<const StringValueDescriptor*>(left)->value() <
+            static_cast<const StringValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::lessOrEqualsOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+
+    // integer < integer
+    if (left->type() == integer && right->type() == integer) {
+        bool result = static_cast<const IntegerValueDescriptor*>(left)->value() <=
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < double
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() <=
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // integer < double
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        bool result = l <= static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < integer
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() <= r;
+        return new BooleanValueDescriptor(result);
+    }
+
+    // string < string
+    if (left->type() == stringVal && right->type() == stringVal) {
+        bool result = static_cast<const StringValueDescriptor*>(left)->value() <=
+            static_cast<const StringValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::greaterOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+
+    // integer < integer
+    if (left->type() == integer && right->type() == integer) {
+        bool result = static_cast<const IntegerValueDescriptor*>(left)->value() >
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < double
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() >
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // integer < double
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        bool result = l > static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < integer
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() > r;
+        return new BooleanValueDescriptor(result);
+    }
+
+    // string < string
+    if (left->type() == stringVal && right->type() == stringVal) {
+        bool result = static_cast<const StringValueDescriptor*>(left)->value() >
+            static_cast<const StringValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+ValueDescriptor *BinaryExprNode::greaterOrEqualsOperation(ValueDescriptor *left, ValueDescriptor *right) const {
+    // simplify type comparisons
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+
+    // integer < integer
+    if (left->type() == integer && right->type() == integer) {
+        bool result = static_cast<const IntegerValueDescriptor*>(left)->value() >=
+            static_cast<const IntegerValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < double
+    if (left->type() == doubleVal && right->type() == doubleVal) {
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() >=
+            static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // integer < double
+    if (left->type() == integer && right->type() == doubleVal) {
+        double l = static_cast<const IntegerValueDescriptor*>(left)->value();
+        bool result = l >= static_cast<const DoubleValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+    // double < integer
+    if (left->type() == doubleVal && right->type() == integer) {
+        double r = static_cast<const IntegerValueDescriptor*>(right)->value();
+        bool result = static_cast<const DoubleValueDescriptor*>(left)->value() >= r;
+        return new BooleanValueDescriptor(result);
+    }
+
+    // string < string
+    if (left->type() == stringVal && right->type() == stringVal) {
+        bool result = static_cast<const StringValueDescriptor*>(left)->value() >=
+            static_cast<const StringValueDescriptor*>(right)->value();
+        return new BooleanValueDescriptor(result);
+    }
+
+    typeError(left, right);
+}
+
+void BinaryExprNode::typeError(const ValueDescriptor *left, const ValueDescriptor *right) const {
+    const char *s = token().symbol();
+    std::string op(s, s[1] == '\0' ? 1 : 2);
+
+    std::string message =
+    "type error at line " + std::to_string(token().lineNumber()) +
+    ": unsupported operand types for '" + op + "': " +
+    left->typeName() + " and " + right->typeName();
+
+    throw std::runtime_error(message);
+}
+
 
 void BinaryExprNode::print() const {
     std::cout << '(';
@@ -96,8 +562,38 @@ void IntegerLiteral::print() const {
     token().print(std::cout);
 }
 
-int IntegerLiteral::evaluate(const SymbolTable &) const {
-    return token().integerValue();
+ValueDescriptor *IntegerLiteral::evaluate(const SymbolTable &) const {
+    return new IntegerValueDescriptor(token().integerValue());
+}
+
+DoubleLiteral::DoubleLiteral(Token token) : ExprNode{std::move(token)} {}
+
+void DoubleLiteral::print() const {
+    token().print(std::cout);
+}
+
+ValueDescriptor *DoubleLiteral::evaluate(const SymbolTable &) const {
+    return new DoubleValueDescriptor(token().doubleValue());
+}
+
+StringLiteral::StringLiteral(Token token) : ExprNode{std::move(token)} {}
+
+void StringLiteral::print() const {
+    token().print(std::cout);
+}
+
+ValueDescriptor *StringLiteral::evaluate(const SymbolTable &) const {
+    return new StringValueDescriptor(token().stringValue());
+}
+
+BoolLiteral::BoolLiteral(Token token) : ExprNode{std::move(token)} {}
+
+void BoolLiteral::print() const {
+    token().print(std::cout);
+}
+
+ValueDescriptor *BoolLiteral::evaluate(const SymbolTable &) const {
+    return new BooleanValueDescriptor(token().booleanValue());
 }
 
 Variable::Variable(Token token) : ExprNode{std::move(token)} {}
@@ -106,8 +602,12 @@ void Variable::print() const {
     token().print(std::cout);
 }
 
-int Variable::evaluate(const SymbolTable &symbolTable) const {
-    return symbolTable.getValueFor(token().identifier());
+ValueDescriptor *Variable::evaluate(const SymbolTable &symbolTable) const {
+
+    if (!symbolTable.isDefined(token().identifier()))
+        throw std::runtime_error("Unknown variable: " + token().identifier());
+
+    return symbolTable.getValueFor(token().identifier())->clone();
 }
 
 EvaluatedRange::EvaluatedRange(int start, int stop, int step):

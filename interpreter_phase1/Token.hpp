@@ -47,7 +47,8 @@ public:
     [[nodiscard]] bool isAdditionOperator() const { return _symbol[0] == '+'; }
     [[nodiscard]] bool isSubtractionOperator() const { return _symbol[0] == '-'; }
     [[nodiscard]] bool isModuloOperator() const { return _symbol[0] == '%'; }
-    [[nodiscard]] bool isDivisionOperator() const { return _symbol[0] == '/'; }
+    [[nodiscard]] bool isDivisionOperator() const { return (_symbol[0] == '/')&&(_symbol[1] != '/'); }
+    [[nodiscard]] bool isFloorDivisionOperator() const { return (_symbol[0] == '/')&&(_symbol[1] == '/'); }
     [[nodiscard]] bool isGreaterThanOperator() const { return (_symbol[0] == '>')&&(_symbol[1] != '='); }
     [[nodiscard]] bool isGreaterThanOrEqualOperator() const { return (_symbol[0] == '>')&&(_symbol[1] == '='); }
     [[nodiscard]] bool isLessThanOperator() const { return (_symbol[0] == '<')&&(_symbol[1] != '='); }
@@ -74,7 +75,13 @@ public:
         _isInteger = true;
     }
     [[nodiscard]] bool isInteger() const { return _isInteger; }
-    [[nodiscard]] int integerValue() const { return _integerValue; }
+    [[nodiscard]] bool isDouble() const { return _isDouble; }
+    [[nodiscard]] bool isString() const { return _isString; }
+    [[nodiscard]] bool isBoolean() const { return _isBoolean; }
+    [[nodiscard]] std::int64_t integerValue() const { return _integerValue; }
+    [[nodiscard]] double doubleValue() const { return _doubleValue; }
+    [[nodiscard]] std::string stringValue() const { return _stringValue; }
+    [[nodiscard]] bool booleanValue() const { return _booleanValue; }
 
     void print(std::ostream &output) const;
 
@@ -84,10 +91,16 @@ private:
     bool _eof{false};
     bool _newline{false};
     bool _isInteger{false};
+    bool _isDouble{false};
+    bool _isString{false};
+    bool _isBoolean{false};
     bool _isIndent{false};
     bool _isDedent{false};
     char _symbol[2]{'\0','\0'};
-    int _integerValue{0};
+    std::int64_t _integerValue{0};
+    double _doubleValue{0};
+    std::string _stringValue{};
+    bool _booleanValue{false};
     std::size_t _lineNumber{0};
     std::size_t _columnNumber{0};
 };
