@@ -3,6 +3,7 @@
 
 #include "SymbolTable.hpp"
 #include "Token.hpp"
+#include "ValueDescriptor.h"
 
 class ExprNode {
 public:
@@ -110,19 +111,20 @@ public:
 
 class EvaluatedRange {
 public:
-    EvaluatedRange(int start, int stop, int step);
+    EvaluatedRange(ValueDescriptor *start, ValueDescriptor *stop, ValueDescriptor *step);
+    ~EvaluatedRange();
 
-    [[nodiscard]] int start() const;
-    [[nodiscard]] int stop() const;
-    [[nodiscard]] int step() const;
+    [[nodiscard]] ValueDescriptor *start() const;
+    [[nodiscard]] ValueDescriptor *stop() const;
+    [[nodiscard]] ValueDescriptor *step() const;
 
     [[nodiscard]] bool hasIteration() const;
-    [[nodiscard]] bool shouldContinue(int nextValue) const;
+    [[nodiscard]] bool shouldContinue(ValueDescriptor *nextValue_) const;
 
 private:
-    int start_;
-    int stop_;
-    int step_;
+    ValueDescriptor *start_;
+    ValueDescriptor *stop_;
+    ValueDescriptor *step_;
 };
 
 class RangeExpression {

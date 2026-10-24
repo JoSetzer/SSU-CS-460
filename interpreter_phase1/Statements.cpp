@@ -78,16 +78,16 @@ void ForStatement::evaluate(SymbolTable &symbolTable) const {
 	if (!evaluated.hasIteration())
 		return;
 
-	int nextValue = evaluated.start();
+	std::int64_t result = static_cast<IntegerValueDescriptor*>(evaluated.start())->value();
 
 	while (true) {
-		symbolTable.setValueFor(itterVar, nextValue);
+		symbolTable.setValueFor(itterVar, new IntegerValueDescriptor(result));
 
 		body->evaluate(symbolTable);
 
-		nextValue += evaluated.step();
+		result += static_cast<IntegerValueDescriptor*>(evaluated.step())->value();
 
-		if (!evaluated.shouldContinue(nextValue))
+		if (!evaluated.shouldContinue(new IntegerValueDescriptor(result)))
 			break;
 	}
 }	

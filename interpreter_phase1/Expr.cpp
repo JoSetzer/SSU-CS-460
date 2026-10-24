@@ -551,10 +551,12 @@ ValueDescriptor *UnaryExprNode::evaluate(const SymbolTable &symbolTable) const {
     if (token().isAdditionOperator()) {
 	if (value->type() == integer) {
 		std::int64_t result = static_cast<const IntegerValueDescriptor*>(value)->value();
+		delete value;
 		return new IntegerValueDescriptor(result);
 	}
 	if (value->type() == doubleVal) {
-		double result = static_cast<const IntegerValueDescriptor*>(value)->value();
+		double result = static_cast<const DoubleValueDescriptor*>(value)->value();
+		delete value;
 		return new DoubleValueDescriptor(result);
 	}
     }
@@ -562,14 +564,17 @@ ValueDescriptor *UnaryExprNode::evaluate(const SymbolTable &symbolTable) const {
     if (token().isSubtractionOperator()) {
 	if (value->type() == integer) {
 		std::int64_t result = static_cast<const IntegerValueDescriptor*>(value)->value();
+		delete value;
     		return new IntegerValueDescriptor(-result);
 	}
 	if (value->type() == doubleVal) {
-		double result = static_cast<const IntegerValueDescriptor*>(value)->value();
+		double result = static_cast<const DoubleValueDescriptor*>(value)->value();
+		delete value;
 		return new DoubleValueDescriptor(-result);
 	}
     }
     
+    delete value;
     throw std::logic_error("unsupported prefix operator");
 }
 
@@ -632,28 +637,49 @@ ValueDescriptor *Variable::evaluate(const SymbolTable &symbolTable) const {
     return symbolTable.getValueFor(token().identifier())->clone();
 }
 
-EvaluatedRange::EvaluatedRange(int start, int stop, int step):
+EvaluatedRange::EvaluatedRange(ValueDescriptor *start, ValueDescriptor *stop, ValueDescriptor *step):
 				start_(start), stop_(stop), step_(step) {
-    	if(step_ == 0)
+    	if(static_cast<IntegerValueDescriptor*>(step_)->value() == 0) {
+		delete start_;
+		delete stop_;
+		delete step_;
 		throw std::logic_error("error: zero-value step");
+	}
 }
 
-int EvaluatedRange::start() const {return start_;}
+ValueDescriptor *EvaluatedRange::start() const {return start_;}
 
-int EvaluatedRange::stop() const {return stop_;}
+ValueDescriptor *EvaluatedRange::stop() const {return stop_;}
 
-int EvaluatedRange::step() const {return step_;}
+ValueDescriptor *EvaluatedRange::step() const {return step_;}
+
+EvaluatedRange::~EvaluatedRange () {
+	delete start_;
+	delete stop_;
+	delete step_;
+}
 
 bool EvaluatedRange::hasIteration() const {
-	if (step_ > 0)
-		return start_ < stop_;
-	return start_ > stop_;
+	std::int64_t start, stop, step;
+	start = static_cast<IntegerValueDescriptor*>(start_)->value();
+	stop = static_cast<IntegerValueDescriptor*>(stop_)->value();
+	step = static_cast<IntegerValueDescriptor*>(step_)->value();
+	
+	if (step > 0)
+		return start < stop;
+	return start > stop;
 }
 
-bool EvaluatedRange::shouldContinue (int nextValue) const {
-	if (step_ > 0)
-		return nextValue < stop_;
-	return nextValue > stop_;
+bool EvaluatedRange::shouldContinue (ValueDescriptor *nextValue_) const {
+	std::int64_t step, stop, nextValue;
+	step = static_cast<IntegerValueDescriptor*>(step_)->value();
+	stop = static_cast<IntegerValueDescriptor*>(stop_)->value();
+	nextValue = static_cast<IntegerValueDescriptor*>(nextValue_)->value();
+	delete nextValue_;
+
+	if (step > 0)
+		return nextValue < stop;
+	return nextValue > stop;
 }
 
 RangeExpression::RangeExpression(ExprNode *stop):
@@ -683,23 +709,37 @@ RangeExpression::~RangeExpression(){
 }
 
 EvaluatedRange RangeExpression::evaluate(const SymbolTable& symbolTable) const {
-	ValueDescriptor *startV, *stopV, *stepV;
-	std::int64_t startI = 0, stopI, stepI = 1;
+	ValueDescriptor *start, *stop, *step;
+    	ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
 	
 	if (startExpression != nullptr) {
-		startV = startExpression->evaluate(symbolTable);
-		startI = static_cast<IntegerValueDescriptor*>(startV)->value();
+		start = startExpression->evaluate(symbolTable);
+		if (start->type() != integer) {
+			delete start;
+       			throw std::runtime_error("RangeExpression::evaluate non-integer range value");
+		}
+	} else
+		start = new IntegerValueDescriptor(0);
+
+	if (stepExpression != nullptr) { 
+		step = stepExpression->evaluate(symbolTable);
+		if (step->type() != integer) {
+       			delete start;
+			delete step;
+			throw std::runtime_error("RangeExpression::evaluate non-integer range value");
+		}
+	} else
+		step = new IntegerValueDescriptor(1);
+
+	stop = stopExpression->evaluate(symbolTable);
+	if (stop->type() != integer) {
+       		delete start;
+		delete stop;
+		delete step;
+		throw std::runtime_error("RangeExpression::evaluate non-integer range value");
 	}
 
-	if (stepExpression != nullptr) {
-		stepV = stepExpression->evaluate(symbolTable);
-		stepI = static_cast<IntegerValueDescriptor*>(stepV)->value();
-	}
-
-	stopV = stopExpression->evaluate(symbolTable);
-	stopI = static_cast<IntegerValueDescriptor*>(stopV)->value();
-
-	return EvaluatedRange(startI, stopI, stepI);	
+	return EvaluatedRange(start, stop, step);	
 }
 
 void RangeExpression::print(std::ostream& output) const {

@@ -6,6 +6,7 @@
 
 #include "Expr.hpp"
 #include "SymbolTable.hpp"
+#include "ValueDescriptor.h"
 
 class Statement {
 public:
