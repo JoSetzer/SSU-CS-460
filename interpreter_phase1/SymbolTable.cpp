@@ -4,7 +4,13 @@
 #include "SymbolTable.hpp"
 
 void SymbolTable::setValueFor(const std::string &variableName, ValueDescriptor* value) {
-    values[variableName] = value;
+	if (isDefined(variableName)) {
+		delete values[variableName];
+    		values[variableName] = value;
+	}
+	else {
+    		values[variableName] = value;
+	}
 }
 
 bool SymbolTable::isDefined(const std::string &variableName) const {
@@ -21,4 +27,9 @@ ValueDescriptor* SymbolTable::getValueFor(const std::string &variableName) const
 void SymbolTable::print() const {
     for (const auto &[variable, value] : values)
         std::cout << variable << " = " << value->toString() << '\n';
+}
+
+SymbolTable::~SymbolTable() {
+    for (const auto &[variable, value] : values)
+	    delete value;
 }
