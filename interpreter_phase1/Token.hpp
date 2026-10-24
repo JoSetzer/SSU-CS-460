@@ -2,6 +2,7 @@
 #define ALEXICALANALYZER_TOKEN_HPP
 
 #include <cstddef>
+#include <cstdint>
 #include <iosfwd>
 #include <string>
 #include <utility>

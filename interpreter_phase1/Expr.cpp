@@ -542,12 +542,34 @@ UnaryExprNode::~UnaryExprNode() {
     delete expression;
 }
 
-int UnaryExprNode::evaluate(const SymbolTable &symbolTable) const {
-    const int value = expression->evaluate(symbolTable);
-    if (token().isAdditionOperator())
-        return value;
-    if (token().isSubtractionOperator())
-        return -value;
+ValueDescriptor *UnaryExprNode::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor::Type integer = ValueDescriptor::Type::integer;
+    ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
+    
+    const ValueDescriptor *value = expression->evaluate(symbolTable);
+    
+    if (token().isAdditionOperator()) {
+	if (value->type() == integer) {
+		std::int64_t result = static_cast<const IntegerValueDescriptor*>(value)->value();
+		return new IntegerValueDescriptor(result);
+	}
+	if (value->type() == doubleVal) {
+		double result = static_cast<const IntegerValueDescriptor*>(value)->value();
+		return new DoubleValueDescriptor(result);
+	}
+    }
+    
+    if (token().isSubtractionOperator()) {
+	if (value->type() == integer) {
+		std::int64_t result = static_cast<const IntegerValueDescriptor*>(value)->value();
+    		return new IntegerValueDescriptor(-result);
+	}
+	if (value->type() == doubleVal) {
+		double result = static_cast<const IntegerValueDescriptor*>(value)->value();
+		return new DoubleValueDescriptor(-result);
+	}
+    }
+    
     throw std::logic_error("unsupported prefix operator");
 }
 
@@ -661,19 +683,23 @@ RangeExpression::~RangeExpression(){
 }
 
 EvaluatedRange RangeExpression::evaluate(const SymbolTable& symbolTable) const {
-	int start = 0;
-	int step = 1;
+	ValueDescriptor *startV, *stopV, *stepV;
+	std::int64_t startI = 0, stopI, stepI = 1;
+	
 	if (startExpression != nullptr) {
-		start = startExpression->evaluate(symbolTable);
+		startV = startExpression->evaluate(symbolTable);
+		startI = static_cast<IntegerValueDescriptor*>(startV)->value();
 	}
 
 	if (stepExpression != nullptr) {
-		step = stepExpression->evaluate(symbolTable);
+		stepV = stepExpression->evaluate(symbolTable);
+		stepI = static_cast<IntegerValueDescriptor*>(stepV)->value();
 	}
 
-	int stop = stopExpression->evaluate(symbolTable);
+	stopV = stopExpression->evaluate(symbolTable);
+	stopI = static_cast<IntegerValueDescriptor*>(stopV)->value();
 
-	return EvaluatedRange(start, stop, step);	
+	return EvaluatedRange(startI, stopI, stepI);	
 }
 
 void RangeExpression::print(std::ostream& output) const {
