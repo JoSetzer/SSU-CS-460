@@ -13,6 +13,8 @@ add_executable(ExprInter
     Expr.cpp
     SymbolTable.cpp
     Statements.cpp
+        ValueDescriptor.cpp
+        ValueDescriptor.h
 )
 
 target_compile_options(ExprInter PRIVATE -Wall -Wextra -Wpedantic)

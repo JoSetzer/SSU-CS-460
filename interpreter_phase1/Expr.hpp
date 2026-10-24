@@ -11,7 +11,7 @@ public:
 
     [[nodiscard]] const Token &token() const;
     virtual void print() const = 0;
-    [[nodiscard]] virtual int evaluate(const SymbolTable &symbolTable) const = 0;
+    [[nodiscard]] virtual ValueDescriptor *evaluate(const SymbolTable &symbolTable) const = 0;
 
 private:
     Token expressionToken;
@@ -23,7 +23,21 @@ public:
     ~BinaryExprNode() override;
 
     void print() const override;
-    [[nodiscard]] int evaluate(const SymbolTable &symbolTable) const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    [[nodiscard]] ValueDescriptor *additionOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *subtractionOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *multiplicationOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *divisionOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *floorDivisionOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *equalsOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *notEqualsOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *lessOrEqualsOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *lessOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *greaterOrEqualsOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *greaterOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[nodiscard]] ValueDescriptor *moduloOperation(ValueDescriptor *left, ValueDescriptor *right) const;
+    [[noreturn]] void typeError(const ValueDescriptor *left, const ValueDescriptor *right) const;
+
 
 private:
     ExprNode *leftOperand;
@@ -36,7 +50,7 @@ public:
     ~UnaryExprNode() override;
 
     void print() const override;
-    [[nodiscard]] int evaluate(const SymbolTable &symbolTable) const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
 
 private:
     ExprNode *expression;
@@ -47,7 +61,43 @@ public:
     explicit IntegerLiteral(Token token);
 
     void print() const override;
-    [[nodiscard]] int evaluate(const SymbolTable &symbolTable) const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+};
+
+class DoubleLiteral final : public ExprNode {
+    public:
+    explicit DoubleLiteral(Token token);
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+};
+
+class BoolLiteral final : public ExprNode {
+    public:
+    explicit BoolLiteral(Token token);
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+};
+
+class StringLiteral final : public ExprNode {
+    public:
+    explicit StringLiteral(Token token);
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+};
+
+class StringConversion final : public ExprNode {
+    public:
+    explicit StringConversion(Token token);
+    ~StringConversion() override;
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+
+    private:
+    ExprNode *literal;
 };
 
 class Variable final : public ExprNode {
@@ -55,7 +105,7 @@ public:
     explicit Variable(Token token);
 
     void print() const override;
-    [[nodiscard]] int evaluate(const SymbolTable &symbolTable) const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
 };
 
 class EvaluatedRange {
