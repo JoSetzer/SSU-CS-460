@@ -12,6 +12,7 @@ enum class Keyword {
     forKeyword,
     inKeyword,
     rangeKeyword,
+    strKeyword,
     printKeyword
 };
 
@@ -68,12 +69,25 @@ public:
     [[nodiscard]] bool isForKeyword() const { return _keyword == Keyword::forKeyword; }
     [[nodiscard]] bool isInKeyword() const { return _keyword == Keyword::inKeyword; }
     [[nodiscard]] bool isRangeKeyword() const { return _keyword == Keyword::rangeKeyword; }
+    [[nodiscard]] bool isStrKeyword() const { return _keyword == Keyword::strKeyword; }
     [[nodiscard]] bool isPrintKeyword() const { return _keyword == Keyword::printKeyword; }
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
     void setIntegerValue(int value) {
         _integerValue = value;
         _isInteger = true;
+    }
+    void setDoubleValue(double value) {
+        _doubleValue = value;
+        _isDouble = true;
+    }
+    void setStringValue(std::string value) {
+        _stringValue = value;
+        _isString = true;
+    }
+    void setBooleanValue(bool value) {
+        _booleanValue = value;
+        _isBoolean = true;
     }
     [[nodiscard]] bool isInteger() const { return _isInteger; }
     [[nodiscard]] bool isDouble() const { return _isDouble; }

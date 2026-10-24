@@ -183,9 +183,9 @@ Token Tokenizer::getToken() {
         if (isDigit(character)) {
             token.setIntegerValue(readInteger(character));
         } else if (character == ';' || character == '+' || character == '-' ||
-                   character == '*' || character == '/' || character == '%' ||
+                   character == '*' || character == ',' || character == '%' ||
                    character == ')' || character == '(' || character == '{' ||
-                   character == '}' || character == ':' || character == ',') {
+                   character == '}' || character == ':') {
             token.setSymbol(character);
         } else if (character == '=' || character == '>' || character == '<') {
 		//peekChar = static_cast<char>(inputStream.peek());
@@ -205,6 +205,13 @@ Token Tokenizer::getToken() {
 				  << ", column " << token.columnNumber() << ".\n";
 			std::exit(EXIT_FAILURE);
 		}
+	} else if (character == '/'){
+		if (static_cast<char>(inputStream.peek()) == '/') {
+			getCharacter(peekChar);
+			token.setSymbol(character, peekChar);
+		} else {
+			token.setSymbol(character);
+		}
 	} else if (isIdentifierStart(character)) {
             std::string identifier = readIdentifier(character);
             if (identifier == "for")
@@ -215,6 +222,8 @@ Token Tokenizer::getToken() {
                 token.setKeyword(Keyword::inKeyword);
             else if (identifier == "range")
                 token.setKeyword(Keyword::rangeKeyword);
+            else if (identifier == "str")
+                token.setKeyword(Keyword::strKeyword);
             else
                 token.setIdentifier(std::move(identifier));
         } else {

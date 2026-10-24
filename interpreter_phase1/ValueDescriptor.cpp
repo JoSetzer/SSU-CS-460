@@ -83,11 +83,12 @@ std::string BooleanValueDescriptor::typeName() const {
 }
 
 std::string BooleanValueDescriptor::toString() const {
-    return "True";
+    	if (booleanValue) return "True";
+	return "False";
 }
 
 ValueDescriptor *BooleanValueDescriptor::clone() const {
-    ValueDescriptor * cloned = new BooleanValueDescriptor(true);
+    ValueDescriptor *cloned = new BooleanValueDescriptor(booleanValue);
     return cloned;
 }
 

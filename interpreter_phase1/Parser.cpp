@@ -258,6 +258,7 @@ ExprNode *Parser::arithTerm() {
     Token token = tokenizer.getToken();
 
     while (token.isMultiplicationOperator() ||
+	   token.isFloorDivisionOperator() ||
            token.isDivisionOperator() ||
            token.isModuloOperator()) {
         ExprNode *right = arithPrimary();
@@ -285,8 +286,30 @@ ExprNode *Parser::arithAtom() {
 
     if (token.isInteger())
         return new IntegerLiteral(token);
+
+    if (token.isDouble())
+        return new DoubleLiteral(token);
+    
+    if (token.isBoolean())
+        return new BoolLiteral(token);
+    
+    if (token.isString())
+        return new StringLiteral(token);
+    
     if (token.isIdentifier())
         return new Variable(token);
+    
+    if (token.isStrKeyword()){
+        Token paren = tokenizer.getToken();
+        if (!paren.isOpenParen())
+            die("Parser::arithAtom", "expected '('", paren);
+	ExprNode *expression = relExpr();
+        paren = tokenizer.getToken();
+        if (!paren.isCloseParen())
+            die("Parser::arithAtom", "expected ')'", paren);
+    	return expression;
+    }	    
+    
     if (token.isOpenParen()) {
         ExprNode *expression = relExpr();
         Token closeParen = tokenizer.getToken();

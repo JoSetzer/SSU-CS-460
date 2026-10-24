@@ -18,6 +18,7 @@ bool SymbolTable::isDefined(const std::string &variableName) const {
 }
 
 ValueDescriptor* SymbolTable::getValueFor(const std::string &variableName) const {
+
     const auto entry = values.find(variableName);
     if (entry == values.end())
         throw std::runtime_error("use of undefined variable '" + variableName + "'");
