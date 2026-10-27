@@ -47,15 +47,48 @@ std::string Tokenizer::readIdentifier(char firstCharacter) {
     return identifier;
 }
 
-int Tokenizer::readInteger(char firstDigit) {
-    int value = firstDigit - '0';
+void Tokenizer::readNumber(char firstDigit, Token &token) {
+    std::int64_t value = firstDigit - '0';
+    auto doubleValue = static_cast<double>(value);
+    bool isInteger = true;
+    double decimalOffset = 10.0;
+
     while (inputStream.peek() != std::char_traits<char>::eof()) {
         char character = static_cast<char>(inputStream.peek());
-        if (!isDigit(character))
-            break;
 
-        const int digit = character - '0';
-        if (value > (std::numeric_limits<int>::max() - digit) / 10) {
+        if (character == '.') {
+            if (!isInteger) {
+                std::cerr << "Expected another digit and instead got a decimal at line " << lineNumber
+                      << ", column " << columnNumber << ".\n";
+                std::exit(EXIT_FAILURE);
+            }
+            isInteger = false;
+            doubleValue = static_cast<double>(value);
+            getCharacter(character);
+
+            character = static_cast<char>(inputStream.peek());
+            if (!isDigit(character)) {
+                std::cerr << "Expected another digit at line " << lineNumber
+                      << ", column " << columnNumber << ".\n";
+                std::exit(EXIT_FAILURE);
+            }
+            continue;
+        }
+        if (!isDigit(character)) {
+
+            break;
+        }
+
+        if (!isInteger) {
+            const auto doubleDigit = static_cast<double>(character - '0');
+
+            getCharacter(character);
+            doubleValue = doubleValue + (doubleDigit / decimalOffset);
+            decimalOffset *= 10;
+            continue;
+        }
+        const std::int64_t digit = character - '0';
+        if (value > (std::numeric_limits<std::int64_t>::max() - digit) / 10) {
             std::cerr << "Integer literal is too large at line " << lineNumber
                       << ", column " << columnNumber << ".\n";
             std::exit(EXIT_FAILURE);
@@ -64,7 +97,19 @@ int Tokenizer::readInteger(char firstDigit) {
         getCharacter(character);
         value = value * 10 + digit;
     }
-    return value;
+
+    if (isIdentifierPart(static_cast<char>(inputStream.peek()))) {
+        // print an "invalid numeric literal" error with line/column, then exit
+        std::cerr << "invalid numeric literal at line " << lineNumber
+                      << ", column " << columnNumber << ".\n";
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (isInteger) {
+        token.setIntegerValue(value);
+    }
+    else
+        token.setDoubleValue(doubleValue);
 }
 
 Tokenizer::Tokenizer(std::ifstream &stream) : inputStream{stream} {}
@@ -181,7 +226,7 @@ Token Tokenizer::getToken() {
         getCharacter(character);
 
         if (isDigit(character)) {
-            token.setIntegerValue(readInteger(character));
+            readNumber(character, token);
         } else if (character == ';' || character == '+' || character == '-' ||
                    character == '*' || character == ',' || character == '%' ||
                    character == ')' || character == '(' || character == '{' ||
