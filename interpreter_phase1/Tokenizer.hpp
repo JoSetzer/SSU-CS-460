@@ -30,7 +30,9 @@ private:
 
     bool getCharacter(char &character);
     std::string readIdentifier(char firstCharacter);
-    void readNumber(char firstDigit, Token &token);
+    std::int64_t readInteger(std::vector<char> number);
+    double readDouble(std::vector<char> number);
+    std::string readStringLiteral (char firstCharacter);
 
     static bool isDigit(char character);
     static bool isIdentifierStart(char character);
