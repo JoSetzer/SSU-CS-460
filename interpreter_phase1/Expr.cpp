@@ -623,9 +623,27 @@ ValueDescriptor *BoolLiteral::evaluate(const SymbolTable &) const {
     return new BooleanValueDescriptor(token().booleanValue());
 }
 
-StringConversion::StringConversion(Token token) : ExprNode{std::move(token)} {}
+StringConversion::StringConversion(Token token, ExprNode *operand): ExprNode{std::move(token)}, literal(operand) {}
 
+StringConversion::~StringConversion() {
+    delete literal;
+}
 
+ValueDescriptor *StringConversion::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor* str = literal->evaluate(symbolTable);
+
+    std::string result = str->toString();
+
+    delete str;
+
+    return new StringValueDescriptor(std::move(result));
+}
+
+void StringConversion::print() const {
+    std::cout << "str(";
+    literal->print();
+    std::cout << ')';
+}
 
 Variable::Variable(Token token) : ExprNode{std::move(token)} {}
 

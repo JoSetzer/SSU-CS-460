@@ -307,7 +307,7 @@ ExprNode *Parser::arithAtom() {
         paren = tokenizer.getToken();
         if (!paren.isCloseParen())
             die("Parser::arithAtom", "expected ')'", paren);
-    	return expression;
+        return new StringConversion(token, expression);
     }	    
     
     if (token.isOpenParen()) {
