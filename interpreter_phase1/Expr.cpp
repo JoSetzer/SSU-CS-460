@@ -438,32 +438,32 @@ ValueDescriptor *BinaryExprNode::greaterOperation(ValueDescriptor *left, ValueDe
     ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
     ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
 
-    // integer < integer
+    // integer > integer
     if (left->type() == integer && right->type() == integer) {
         bool result = static_cast<const IntegerValueDescriptor*>(left)->value() >
             static_cast<const IntegerValueDescriptor*>(right)->value();
         return new BooleanValueDescriptor(result);
     }
-    // double < double
+    // double > double
     if (left->type() == doubleVal && right->type() == doubleVal) {
         bool result = static_cast<const DoubleValueDescriptor*>(left)->value() >
             static_cast<const DoubleValueDescriptor*>(right)->value();
         return new BooleanValueDescriptor(result);
     }
-    // integer < double
+    // integer > double
     if (left->type() == integer && right->type() == doubleVal) {
         double l = static_cast<const IntegerValueDescriptor*>(left)->value();
         bool result = l > static_cast<const DoubleValueDescriptor*>(right)->value();
         return new BooleanValueDescriptor(result);
     }
-    // double < integer
+    // double > integer
     if (left->type() == doubleVal && right->type() == integer) {
         double r = static_cast<const IntegerValueDescriptor*>(right)->value();
         bool result = static_cast<const DoubleValueDescriptor*>(left)->value() > r;
         return new BooleanValueDescriptor(result);
     }
 
-    // string < string
+    // string > string
     if (left->type() == stringVal && right->type() == stringVal) {
         bool result = static_cast<const StringValueDescriptor*>(left)->value() >
             static_cast<const StringValueDescriptor*>(right)->value();
@@ -479,32 +479,32 @@ ValueDescriptor *BinaryExprNode::greaterOrEqualsOperation(ValueDescriptor *left,
     ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
     ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
 
-    // integer < integer
+    // integer >= integer
     if (left->type() == integer && right->type() == integer) {
         bool result = static_cast<const IntegerValueDescriptor*>(left)->value() >=
             static_cast<const IntegerValueDescriptor*>(right)->value();
         return new BooleanValueDescriptor(result);
     }
-    // double < double
+    // double >= double
     if (left->type() == doubleVal && right->type() == doubleVal) {
         bool result = static_cast<const DoubleValueDescriptor*>(left)->value() >=
             static_cast<const DoubleValueDescriptor*>(right)->value();
         return new BooleanValueDescriptor(result);
     }
-    // integer < double
+    // integer >= double
     if (left->type() == integer && right->type() == doubleVal) {
         double l = static_cast<const IntegerValueDescriptor*>(left)->value();
         bool result = l >= static_cast<const DoubleValueDescriptor*>(right)->value();
         return new BooleanValueDescriptor(result);
     }
-    // double < integer
+    // double >= integer
     if (left->type() == doubleVal && right->type() == integer) {
         double r = static_cast<const IntegerValueDescriptor*>(right)->value();
         bool result = static_cast<const DoubleValueDescriptor*>(left)->value() >= r;
         return new BooleanValueDescriptor(result);
     }
 
-    // string < string
+    // string >= string
     if (left->type() == stringVal && right->type() == stringVal) {
         bool result = static_cast<const StringValueDescriptor*>(left)->value() >=
             static_cast<const StringValueDescriptor*>(right)->value();
@@ -621,6 +621,28 @@ void BoolLiteral::print() const {
 
 ValueDescriptor *BoolLiteral::evaluate(const SymbolTable &) const {
     return new BooleanValueDescriptor(token().booleanValue());
+}
+
+StringConversion::StringConversion(Token token, ExprNode *operand): ExprNode{std::move(token)}, literal(operand) {}
+
+StringConversion::~StringConversion() {
+    delete literal;
+}
+
+ValueDescriptor *StringConversion::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor* str = literal->evaluate(symbolTable);
+
+    std::string result = str->toString();
+
+    delete str;
+
+    return new StringValueDescriptor(std::move(result));
+}
+
+void StringConversion::print() const {
+    std::cout << "str(";
+    literal->print();
+    std::cout << ')';
 }
 
 Variable::Variable(Token token) : ExprNode{std::move(token)} {}

@@ -3,6 +3,7 @@
 //
 
 #include "ValueDescriptor.h"
+#include <sstream>
 
 /** IntegerValueDescriptor Implementation
  * constructor takes in a int64_t value
@@ -53,7 +54,9 @@ std::string DoubleValueDescriptor::typeName() const {
 }
 
 std::string DoubleValueDescriptor::toString() const {
-    return std::to_string(doubleValue);
+    std::ostringstream output;
+    output << doubleValue;
+    return output.str();
 }
 
 ValueDescriptor *DoubleValueDescriptor::clone() const {

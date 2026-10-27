@@ -91,7 +91,7 @@ class StringLiteral final : public ExprNode {
 
 class StringConversion final : public ExprNode {
     public:
-    explicit StringConversion(Token token);
+    explicit StringConversion(Token token, ExprNode *operand);
     ~StringConversion() override;
 
     void print() const override;
