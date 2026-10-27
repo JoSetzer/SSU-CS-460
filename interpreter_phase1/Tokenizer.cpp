@@ -35,6 +35,18 @@ bool Tokenizer::getCharacter(char &character) {
     return true;
 }
 
+std::string Tokenizer::readStringLiteral(char firstCharacter) {
+    std::string stringLiteral{firstCharacter};
+    while (inputStream.peek() != std::char_traits<char>::eof()) {
+        char character = static_cast<char>(inputStream.peek());
+        if (!isIdentifierPart(character) && character != firstCharacter)
+            break;
+        getCharacter(character);
+        stringLiteral += character;
+    }
+    return stringLiteral;
+}
+
 std::string Tokenizer::readIdentifier(char firstCharacter) {
     std::string identifier{firstCharacter};
     while (inputStream.peek() != std::char_traits<char>::eof()) {
@@ -47,69 +59,34 @@ std::string Tokenizer::readIdentifier(char firstCharacter) {
     return identifier;
 }
 
-void Tokenizer::readNumber(char firstDigit, Token &token) {
-    std::int64_t value = firstDigit - '0';
-    auto doubleValue = static_cast<double>(value);
-    bool isInteger = true;
-    double decimalOffset = 10.0;
+double Tokenizer::readDouble(std::vector<char> number) {
+	if (number.size() < 1) {
+            		std::cerr << "Double literal is too small at line " << lineNumber
+                      		  << ", column " << columnNumber << ".\n";
+            		std::exit(EXIT_FAILURE);
+	}
+	double value = std::atof(number);
+    	return value;
+}
 
-    while (inputStream.peek() != std::char_traits<char>::eof()) {
-        char character = static_cast<char>(inputStream.peek());
+std::int64_t Tokenizer::readInteger(std::vector<char> number) {
+	if (number.size() < 1) {
+            		std::cerr << "Integer literal is too small at line " << lineNumber
+                      		  << ", column " << columnNumber << ".\n";
+            		std::exit(EXIT_FAILURE);
 
-        if (character == '.') {
-            if (!isInteger) {
-                std::cerr << "Expected another digit and instead got a decimal at line " << lineNumber
-                      << ", column " << columnNumber << ".\n";
-                std::exit(EXIT_FAILURE);
-            }
-            isInteger = false;
-            doubleValue = static_cast<double>(value);
-            getCharacter(character);
-
-            character = static_cast<char>(inputStream.peek());
-            if (!isDigit(character)) {
-                std::cerr << "Expected another digit at line " << lineNumber
-                      << ", column " << columnNumber << ".\n";
-                std::exit(EXIT_FAILURE);
-            }
-            continue;
-        }
-        if (!isDigit(character)) {
-
-            break;
-        }
-
-        if (!isInteger) {
-            const auto doubleDigit = static_cast<double>(character - '0');
-
-            getCharacter(character);
-            doubleValue = doubleValue + (doubleDigit / decimalOffset);
-            decimalOffset *= 10;
-            continue;
-        }
-        const std::int64_t digit = character - '0';
-        if (value > (std::numeric_limits<std::int64_t>::max() - digit) / 10) {
-            std::cerr << "Integer literal is too large at line " << lineNumber
-                      << ", column " << columnNumber << ".\n";
-            std::exit(EXIT_FAILURE);
-        }
-
-        getCharacter(character);
-        value = value * 10 + digit;
-    }
-
-    if (isIdentifierPart(static_cast<char>(inputStream.peek()))) {
-        // print an "invalid numeric literal" error with line/column, then exit
-        std::cerr << "invalid numeric literal at line " << lineNumber
-                      << ", column " << columnNumber << ".\n";
-        std::exit(EXIT_FAILURE);
-    }
-
-    if (isInteger) {
-        token.setIntegerValue(value);
-    }
-    else
-        token.setDoubleValue(doubleValue);
+	}
+	std::int64_t value = number[0] - '0';
+	for (std::size_t i = 1; i < number.size()-1; i++){
+        	const int digit = number[i] - '0';
+        	if (value > (std::numeric_limits<std::int64_t>::max() - digit) / 10) {
+            		std::cerr << "Integer literal is too large at line " << lineNumber
+                      		  << ", column " << columnNumber << ".\n";
+            		std::exit(EXIT_FAILURE);
+        	}
+        	value = value * 10 + digit;
+    	}
+    return value;
 }
 
 Tokenizer::Tokenizer(std::ifstream &stream) : inputStream{stream} {}
@@ -226,7 +203,24 @@ Token Tokenizer::getToken() {
         getCharacter(character);
 
         if (isDigit(character)) {
-            readNumber(character, token);
+		bool isDouble = false;
+		std::vector<char> number;
+		while (isDigit(character) || character == '.') {
+			if (character == '.') {
+				if (isDouble = true) {
+					std::cerr << "Error: Too many decimals in double " << token.lineNumber()
+				  		  << ", column " << token.columnNumber() << ".\n";
+					std::exit(EXIT_FAILURE);
+				}
+				isDouble = true;
+			}
+			number.push_back(character);
+			getCharacter(character);
+		}
+		if (isDouble)
+			token.setDoubleValue(readDouble(number));
+		else	
+            		token.setIntegerValue(readInteger(number);
         } else if (character == ';' || character == '+' || character == '-' ||
                    character == '*' || character == ',' || character == '%' ||
                    character == ')' || character == '(' || character == '{' ||
@@ -257,8 +251,11 @@ Token Tokenizer::getToken() {
 		} else {
 			token.setSymbol(character);
 		}
+	} else if (character == ''' || '"') {
+		std::string stringLiteral = readString(character);
+		token.setStringValue(stringLiteral);
 	} else if (isIdentifierStart(character)) {
-            std::string identifier = readIdentifier(character);
+            	std::string identifier = readIdentifier(character);
             if (identifier == "for")
                 token.setKeyword(Keyword::forKeyword);
             else if (identifier == "print")
@@ -269,6 +266,10 @@ Token Tokenizer::getToken() {
                 token.setKeyword(Keyword::rangeKeyword);
             else if (identifier == "str")
                 token.setKeyword(Keyword::strKeyword);
+            else if (identifier == "True")
+                token.setBooleanValue(true);
+            else if (identifier == "False")
+                token.setBooleanValue(false);
             else
                 token.setIdentifier(std::move(identifier));
         } else {
