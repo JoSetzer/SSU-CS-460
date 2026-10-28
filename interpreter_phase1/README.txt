@@ -15,6 +15,18 @@ Contributions:
 - Converted C++ for loop implementation to Python style for loop
 - Implemented range() function
 
+Interpreter Phase 3
+Team Members:
+*Julian Contreras
+*Jonas Setzer
+
+Contributions:
+*Julian Contreras:
+- Implemented ValueDescriptor class and subclasses {IntegerValueDescriptor, DoubleValueDescriptor, BooleanValueDescriptor, StringValueDescriptor}
+- Changed BinaryExprNode to return ValueDescriptors instead of ints
+- Implemented Stringconversion
+- Modified Token to account for str and //
+- Worked on getToken in the Tokenizer
 AI Use:
 * No AI was used at any stage in development
 
@@ -29,3 +41,7 @@ This command produces an executable named interpreter.x. The interpreter must ac
 For example:
 
 ./interpreter.x tests/basic-loop.txt
+
+Run to check for memory leaks
+
+valgrind --leak-check=full ./interpreter.x tests/basic-loop.txt
