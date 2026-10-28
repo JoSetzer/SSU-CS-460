@@ -1,20 +1,3 @@
-Interpreter Phase 1
-Team Members: 
-*Julian Contreras
-*Jonas Setzer
-
-Contributions:
-*Julian Contreras:
-- Implemented Original C++ For loop statements
-- Implemented Print statements
-- Implemented Indent and Dedent
-
-*Jonas Setzer:
-- Added relational operators to token and tokenizer
-- Updated parser class with real expressions and real terms functions
-- Converted C++ for loop implementation to Python style for loop
-- Implemented range() function
-
 Interpreter Phase 3
 Team Members:
 *Julian Contreras
@@ -27,6 +10,14 @@ Contributions:
 - Implemented Stringconversion
 - Modified Token to account for str and //
 - Worked on getToken in the Tokenizer
+
+*Jonas Setzer:
+- Added new literal recognition to Tokenizer
+- Updated int values to int64_t in original integer token
+- Changed UnaryExprNode to return ValueDescriptors instead of ints
+- Updated range() function to accept ValueDescriptors and evaluate to ints
+- Modified ArithAtom to recognize and handle new literals
+
 AI Use:
 * No AI was used at any stage in development
 
