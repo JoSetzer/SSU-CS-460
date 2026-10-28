@@ -13,8 +13,8 @@ void Token::print(std::ostream &output) const {
         output << "print";
     else if (isRangeKeyword())
 	output << "range";
-    else if (isStrKeyword())      // add
-        output << "str";
+    else if (isStrKeyword())
+	output << "str";
     else if (isInKeyword())
 	output << "in";
     else if (isOpenParen())
@@ -57,6 +57,15 @@ void Token::print(std::ostream &output) const {
         output << identifier();
     else if (isInteger())
         output << integerValue();
+    else if (isDouble())
+        output << doubleValue();
+    else if (isBoolean()) {
+	if (booleanValue())
+       		output << "True";
+	else
+		output << "False";
+    } else if (isString())
+        output << stringValue();
     else if (isIndent())
         output << "INDENT";
     else if (isDedent())

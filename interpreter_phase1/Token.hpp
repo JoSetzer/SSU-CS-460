@@ -73,7 +73,7 @@ public:
     [[nodiscard]] bool isPrintKeyword() const { return _keyword == Keyword::printKeyword; }
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
-    void setIntegerValue(std::int64_t value) {
+    void setIntegerValue(int value) {
         _integerValue = value;
         _isInteger = true;
     }
