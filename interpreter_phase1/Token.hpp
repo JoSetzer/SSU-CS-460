@@ -13,7 +13,11 @@ enum class Keyword {
     inKeyword,
     rangeKeyword,
     strKeyword,
-    printKeyword
+    printKeyword,
+    ifKeyword,
+    elifKeyword,
+    elseKeyword,
+    whileKeyword
 };
 
 class Token {
@@ -67,6 +71,10 @@ public:
     void setKeyword(Keyword keyword) { _keyword = keyword; }
     [[nodiscard]] bool isKeyword() const { return _keyword != Keyword::none; }
     [[nodiscard]] bool isForKeyword() const { return _keyword == Keyword::forKeyword; }
+    [[nodiscard]] bool isWhileKeyword() const { return _keyword == Keyword::whileKeyword; }
+    [[nodiscard]] bool isIfKeyword() const { return _keyword == Keyword::ifKeyword; }
+    [[nodiscard]] bool isElifKeyword() const { return _keyword == Keyword::elifKeyword; }
+    [[nodiscard]] bool isElseKeyword() const { return _keyword == Keyword::elseKeyword; }
     [[nodiscard]] bool isInKeyword() const { return _keyword == Keyword::inKeyword; }
     [[nodiscard]] bool isRangeKeyword() const { return _keyword == Keyword::rangeKeyword; }
     [[nodiscard]] bool isStrKeyword() const { return _keyword == Keyword::strKeyword; }

@@ -68,6 +68,12 @@ Statement *Parser::statement() {
     if (token.isForKeyword())
         return forStatement();
 
+    if (token.isWhileKeyword())
+        return whileStatement();
+
+    if (token.isIfKeyword())
+        return ifStatement();
+
     if (token.isPrintKeyword()) {
         Statement* print = new PrintStatement(relExpr());
 
@@ -190,6 +196,72 @@ ForStatement* Parser::forStatement() {
     Statements* body = suite();
 
     return new ForStatement(itterVar.identifier(), parsedRange, body);
+}
+
+WhileStatement *Parser::whileStatement() {
+    // at this point we already have the while keyword, so now we move on to the condition
+    ExprNode *condition = relExpr();
+
+    // then the colon
+    Token colon = tokenizer.getToken();
+
+    if (!colon.isColon())
+        die("Parser::whileStatement", "expected ':'", colon);
+
+    //then the body
+    Statements *body = suite();
+
+    return new WhileStatement(condition, body);
+}
+
+IfStatement *Parser::ifStatement() {
+    // at this point we already have the if keyword, so now we move on to the condition
+    ExprNode *condition = relExpr();
+
+    // then the colon
+    Token colon = tokenizer.getToken();
+    if (!colon.isColon())
+        die("Parser::ifStatement", "expected ':'", colon);
+
+    // then the body
+    Statements *body = suite();
+
+    // now we get as many elif statements as there are
+    std::vector<ElifStatement *> elifStatements;
+    Token token = tokenizer.getToken();
+    while (token.isElifKeyword()) {
+        // elif condition
+        ExprNode *elifCondition = relExpr();
+        // colon
+        colon = tokenizer.getToken();
+        if (!colon.isColon())
+            die("Parser::ifStatement", "expected ':' after elif condition", colon);
+
+        // body
+        Statements *elifBody = suite();
+
+        // add the elif to the vector
+        elifStatements.push_back(new ElifStatement(elifCondition, elifBody));
+
+        // get next token and see if it's another elif
+        token = tokenizer.getToken();
+    }
+
+    // is token is not elif, check if it's an else statement
+    ElseStatement *elseStatement = nullptr;
+    if (token.isElseKeyword()) {
+        // if it is, then get the colon
+        colon = tokenizer.getToken();
+        if (!colon.isColon())
+            die("Parser::ifStatement", "expected ':' after else", colon);
+        // make the elseStatement
+        elseStatement = new ElseStatement(suite());
+    } else {
+        tokenizer.ungetToken();
+    }
+
+    // make the if statement
+    return new IfStatement(condition, body, elifStatements, elseStatement);
 }
 
 ExprNode *Parser::relExpr() {

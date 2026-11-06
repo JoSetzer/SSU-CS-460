@@ -9,6 +9,14 @@ void Token::print(std::ostream &output) const {
         output << "EOF";
     else if (isForKeyword())
         output << "for";
+    else if (isWhileKeyword())
+        output << "while";
+    else if (isIfKeyword())
+        output << "if";
+    else if (isElifKeyword())
+        output << "elif";
+    else if (isElseKeyword())
+        output << "else";
     else if (isPrintKeyword())
         output << "print";
     else if (isRangeKeyword())

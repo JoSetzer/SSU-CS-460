@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <stdexcept>
 
 #include "Statements.hpp"
 
@@ -102,4 +103,207 @@ void ForStatement::print() const {
     std::cout << ":\n";
     body->print();
     std::cout << "\n";
+}
+
+WhileStatement::WhileStatement(ExprNode *condition, Statements *body) {
+    this->condition = condition;
+    this->body = body;
+}
+
+WhileStatement::~WhileStatement() {
+    delete condition;
+    delete body;
+}
+
+void WhileStatement::evaluate(SymbolTable &symbolTable) const {
+    // this is a loop
+
+    while (true) {
+        // making sure that the condition is a boolean type
+        ValueDescriptor *value = condition->evaluate(symbolTable);
+        bool conditionResult = false;
+
+        if (value->type() == ValueDescriptor::Type::boolean) {
+            if (value->toString() == "True") {
+                conditionResult = true;
+            }
+        }
+        else {
+            std::string message = "The \"while\" condition is not a boolean, got " + value->typeName();
+            delete value;
+            throw std::runtime_error(message);
+        }
+        delete value;
+
+
+        if (!conditionResult) {
+            return;
+        }
+        body->evaluate(symbolTable);
+    }
+}
+
+void WhileStatement::print() const {
+    std::cout << "while ";
+    condition->print();
+    std::cout << ":\n";
+    body->print();
+    std::cout << "\n";
+}
+
+IfStatement::IfStatement(ExprNode *condition, Statements *body) {
+    this->condition = condition;
+    this->body = body;
+    elseStatement = nullptr;
+}
+
+IfStatement::IfStatement(ExprNode *condition, Statements *body, ElseStatement *elseStatement) {
+    this->condition = condition;
+    this->body = body;
+    this->elseStatement = elseStatement;
+}
+
+IfStatement::IfStatement(ExprNode *condition, Statements *body, std::vector<ElifStatement *> &elifStatements, ElseStatement *elseStatement) {
+    this->condition = condition;
+    this->body = body;
+    this->elifStatements = elifStatements;
+    this->elseStatement = elseStatement;
+}
+
+IfStatement::~IfStatement() {
+    delete condition;
+    delete body;
+    for (const auto *elifStatement : elifStatements)
+        delete elifStatement;
+    delete elseStatement;
+}
+
+void IfStatement::evaluate(SymbolTable &symbolTable) const {
+
+    ValueDescriptor *value = condition->evaluate(symbolTable);
+    bool conditionResult = false;
+
+    if (value->type() == ValueDescriptor::Type::boolean) {
+        if (value->toString() == "True") {
+            conditionResult = true;
+        }
+    }
+    else {
+        std::string message = "The \"if\" condition is not a boolean, got " + value->typeName();
+        delete value;
+        throw std::runtime_error(message);
+    }
+    delete value;
+
+    // if (condition == true) evaluate body
+    if (conditionResult) {
+        body->evaluate(symbolTable);
+        return;
+    }
+
+    // check whether each elif condition is true and if so return
+    for (const auto *elifStatement : elifStatements) {
+        if (elifStatement->didEvaluate(symbolTable)) {
+            return;
+        }
+    }
+
+    // if an else exists then evaluate its body
+    if (elseStatement != nullptr) {
+        elseStatement->evaluate(symbolTable);
+    }
+}
+
+void IfStatement::print() const {
+    std::cout << "if ";
+    condition->print();
+    std::cout << ":\n";
+    body->print();
+    std::cout << "\n";
+
+    for (const auto *elifStatement : elifStatements) {
+        elifStatement->print();
+    }
+
+    if (elseStatement != nullptr) {
+        elseStatement->print();
+    }
+}
+
+ElifStatement::ElifStatement(ExprNode *condition, Statements *body) {
+    this->condition = condition;
+    this->body = body;
+}
+
+ElifStatement::~ElifStatement() {
+    delete condition;
+    delete body;
+}
+
+void ElifStatement::evaluate(SymbolTable &symbolTable) const {
+    ValueDescriptor *value = condition->evaluate(symbolTable);
+    bool conditionResult = false;
+
+    if (value->type() == ValueDescriptor::Type::boolean) {
+        if (value->toString() == "True") {
+            conditionResult = true;
+        }
+    }
+    else {
+        std::string message = "The \"elif\" condition is not a boolean, got " + value->typeName();
+        delete value;
+        throw std::runtime_error(message);
+    }
+    delete value;
+
+    if (conditionResult) {
+        body->evaluate(symbolTable);
+    }
+}
+
+bool ElifStatement::didEvaluate(SymbolTable &symbolTable) const {
+    ValueDescriptor *value = condition->evaluate(symbolTable);
+    bool conditionResult = false;
+
+    if (value->type() == ValueDescriptor::Type::boolean) {
+        if (value->toString() == "True") {
+            conditionResult = true;
+        }
+    }
+    else {
+        std::string message = "The \"elif\" condition is not a boolean, got " + value->typeName();
+        delete value;
+        throw std::runtime_error(message);
+    }
+    delete value;
+
+    if (conditionResult) {
+        body->evaluate(symbolTable);
+    }
+    return conditionResult;
+}
+
+void ElifStatement::print() const {
+    std::cout << "elif ";
+    condition->print();
+    std::cout << ":\n";
+    body->print();
+    std::cout << "\n";
+}
+
+ElseStatement::ElseStatement(Statements *body) {
+    this->body = body;
+}
+
+ElseStatement::~ElseStatement() {
+    delete body;
+}
+
+void ElseStatement::evaluate(SymbolTable &symbolTable) const {
+    body->evaluate(symbolTable);
+}
+
+void ElseStatement::print() const {
+    std::cout << "else:\n";
+    body->print();
 }
