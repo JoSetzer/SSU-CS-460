@@ -123,6 +123,27 @@ class FloatConversion final : public ExprNode {
     ExprNode *literal;
 };
 
+class LenExpr final : public ExprNode {
+    public:
+    explicit LenExpr(Token token, ExprNode *expression);
+    ~LenExpr() override;
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    private:
+    ExprNode *expression;
+};
+
+class SplitExpr final : public ExprNode {
+    public:
+    explicit SplitExpr(Token token, ExprNode *expression);
+    ~SplitExpr() override;
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    private:
+    ExprNode *expression;
+};
+
 class Variable final : public ExprNode {
 public:
     explicit Variable(Token token);
@@ -173,5 +194,17 @@ private:
     ExprNode* startExpression;
     ExprNode* stopExpression;
     ExprNode* stepExpression;
+};
+
+class SubscriptExpr : public ExprNode {
+    public:
+    explicit SubscriptExpr(Token token, ExprNode *object, ExprNode *subscript);
+
+    ~SubscriptExpr() override;
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    private:
+    ExprNode *object;
+    ExprNode *subscript;
 };
 #endif // EXPRINTER_EXPR_HPP

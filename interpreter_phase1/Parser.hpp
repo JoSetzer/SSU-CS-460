@@ -28,6 +28,7 @@ public:
     ExprNode *arithExpr();
     ExprNode *arithTerm();
     ExprNode *arithPrimary();
+    ExprNode *postfixExpr();
     ExprNode *arithAtom();
 
 private:

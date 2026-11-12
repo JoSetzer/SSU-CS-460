@@ -266,7 +266,8 @@ Token Tokenizer::getToken() {
         } else if (character == ';' || character == '+' || character == '-' ||
                    character == '*' || character == ',' || character == '%' ||
                    character == ')' || character == '(' || character == '{' ||
-                   character == '}' || character == ':') {
+                   character == '}' || character == ':' || character == '[' ||
+                   character == ']') {
             token.setSymbol(character);
         } else if (character == '=' || character == '>' || character == '<') {
 		//peekChar = static_cast<char>(inputStream.peek());
@@ -320,6 +321,10 @@ Token Tokenizer::getToken() {
 				token.setKeyword(Keyword::elifKeyword);
             else if (identifier == "else")
 				token.setKeyword(Keyword::elseKeyword);
+            else if (identifier == "len")
+				token.setKeyword(Keyword::lenKeyword);
+            else if (identifier == "split")
+				token.setKeyword(Keyword::splitKeyword);
             else if (identifier == "True")
                 token.setBooleanValue(true);
             else if (identifier == "False")
