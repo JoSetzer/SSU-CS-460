@@ -82,4 +82,22 @@ private:
     std::string stringValue;
 };
 
+class ListObjectDescriptor {
+    enum class ListObjectType {
+        untyped,
+        numeric,
+        boolean,
+        string
+    };
+
+public:
+    explicit ListObjectDescriptor(ListObjectType type);
+    ~ListObjectDescriptor();
+
+    [[nodiscard]] ListObjectType type() const;
+    [[nodiscard]] std::string typeName() const;
+    [[nodiscard]] std::string toString() const;
+
+};
+
 #endif //EXPRINTER_VALUEDESCRIPTOR_H

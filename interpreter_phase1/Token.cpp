@@ -29,6 +29,10 @@ void Token::print(std::ostream &output) const {
         output << "float";
     else if (isInKeyword())
 	output << "in";
+    else if (isLenKeyword())
+        output << "len";
+    else if (isSplitKeyword())
+        output << "split";
     else if (isOpenParen())
         output << '(';
     else if (isCloseParen())
@@ -37,6 +41,10 @@ void Token::print(std::ostream &output) const {
         output << '{';
     else if (isCloseBrace())
         output << '}';
+    else if (isOpenBracket())
+        output << '[';
+    else if (isCloseBracket())
+        output << ']';
     else if (isAssignmentOperator())
         output << " = ";
     else if (isCompareOperator())

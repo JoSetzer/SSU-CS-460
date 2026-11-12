@@ -813,6 +813,57 @@ void FloatConversion::print() const {
     std::cout << ')';
 }
 
+LenExpr::LenExpr(Token token, ExprNode *expression) : ExprNode(std::move(token)), expression(expression) {}
+
+LenExpr::~LenExpr() {
+    delete expression;
+}
+
+ValueDescriptor *LenExpr::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor* object = expression->evaluate(symbolTable);
+
+    // if it's a string
+    if (object->type() == ValueDescriptor::Type::string) {
+        size_t num = dynamic_cast<const StringValueDescriptor *>(object)->value().size();
+        int size = static_cast<int>(num);
+        delete object;
+
+        return new IntegerValueDescriptor(size);
+    }
+
+    // NEED TO IMPLEMENT LIST
+
+    // if anything not a string or list
+    std::string message = "Error in LenExpr::evaluate(): invalid type" + object->typeName() + " at line " + std::to_string(token().lineNumber());
+    delete object;
+    throw std::runtime_error(message);
+}
+
+void LenExpr::print() const {
+    std::cout << "len(";
+    expression->print();
+    std::cout << ')';
+}
+
+SplitExpr::SplitExpr(Token token, ExprNode *expression) : ExprNode(std::move(token)), expression(expression) {}
+
+SplitExpr::~SplitExpr() {
+    delete expression;
+}
+
+ValueDescriptor *SplitExpr::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor* object = expression->evaluate(symbolTable);
+
+    if (object->type() != ValueDescriptor::Type::string) {
+        std::string message = "Error in SplitExpr::evaluate(): invalid expression " + object->typeName() + " at line " + std::to_string(token().lineNumber());
+        throw std::runtime_error(message);
+    }
+
+    // NEED TO IMPLEMENT LIST
+    // split takes a string and returns a list of each word in that string
+    // ignores white space
+}
+
 Variable::Variable(Token token) : ExprNode{std::move(token)} {}
 
 void Variable::print() const {
@@ -952,4 +1003,54 @@ void RangeExpression::print(std::ostream& output) const {
         stepExpression->print();
     }
     output << ")";
+}
+
+SubscriptExpr::SubscriptExpr(Token token, ExprNode *object, ExprNode *subscript) : ExprNode{std::move(token)}, object{object}, subscript{subscript} {}
+
+SubscriptExpr::~SubscriptExpr() {
+    delete object;
+    delete subscript;
+}
+
+ValueDescriptor *SubscriptExpr::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor *obj = object->evaluate(symbolTable);
+    ValueDescriptor *subscr = nullptr;
+
+    try {
+        subscr = subscript->evaluate(symbolTable);
+    } catch (...) {
+        delete obj;
+        throw;
+    }
+
+    if (subscr->type() != ValueDescriptor::Type::integer) {
+        delete obj;
+        delete subscr;
+
+        throw std::runtime_error("Error at SubscriptExpr::evaluate(): subscript type mismatch");
+    }
+    std::int64_t i = dynamic_cast<IntegerValueDescriptor*>(subscr)->value();
+    delete subscr;
+
+    if (obj->type() == ValueDescriptor::Type::string) {
+        const std::string &s = dynamic_cast<StringValueDescriptor*>(obj)->value();
+
+        if (i < 0 || i >= s.size()) {
+            delete obj;
+            throw std::runtime_error("Error at SubscriptExpr::evaluate(): subscript out of range");
+        }
+
+        std::string character = std::string(1, s.at(i));
+        delete obj;
+        return new StringValueDescriptor(character);
+    }
+
+    // NEED TO IMPLEMENT LIST
+
+    // if it's not a string or a list
+    delete obj;
+
+    throw std::runtime_error("Error at SubscriptExpr::evaluate(): subscript type mismatch");
+
+
 }

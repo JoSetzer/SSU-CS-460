@@ -19,7 +19,9 @@ enum class Keyword {
     ifKeyword,
     elifKeyword,
     elseKeyword,
-    whileKeyword
+    whileKeyword,
+    lenKeyword,
+    splitKeyword
 };
 
 class Token {
@@ -48,6 +50,8 @@ public:
     [[nodiscard]] bool isCloseParen() const { return _symbol[0] == ')'; }
     [[nodiscard]] bool isOpenBrace() const { return _symbol[0] == '{'; }
     [[nodiscard]] bool isCloseBrace() const { return _symbol[0] == '}'; }
+    [[nodiscard]] bool isOpenBracket() const { return _symbol[0] == '['; }
+    [[nodiscard]] bool isCloseBracket() const { return _symbol[0] == ']'; }
     [[nodiscard]] bool isSemicolon() const { return _symbol[0] == ';'; }
     [[nodiscard]] bool isAssignmentOperator() const { return (_symbol[0] == '=')&&(_symbol[1] != '='); }
     [[nodiscard]] bool isCompareOperator() const { return (_symbol[0] == '=')&&(_symbol[1] == '='); }
@@ -83,6 +87,8 @@ public:
     [[nodiscard]] bool isIntKeyword() const { return _keyword == Keyword::intKeyword; }
     [[nodiscard]] bool isFloatKeyword() const { return _keyword == Keyword::floatKeyword; }
     [[nodiscard]] bool isPrintKeyword() const { return _keyword == Keyword::printKeyword; }
+    [[nodiscard]] bool isLenKeyword() const { return _keyword == Keyword::lenKeyword; }
+    [[nodiscard]] bool isSplitKeyword() const { return _keyword == Keyword::splitKeyword; }
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
     void setIntegerValue(std::int64_t value) {

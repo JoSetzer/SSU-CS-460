@@ -346,10 +346,31 @@ ExprNode *Parser::arithPrimary() {
     // <arith-primary> -> [ <sign> ] <arith-atom>
     Token token = tokenizer.getToken();
     if (token.isAdditionOperator() || token.isSubtractionOperator())
-        return new UnaryExprNode(token, arithAtom());
+        return new UnaryExprNode(token, postfixExpr());
 
     tokenizer.ungetToken();
-    return arithAtom();
+    return postfixExpr();
+}
+
+ExprNode *Parser::postfixExpr() {
+    // <postfix-expression> -> <atom> [ "[" <rel-expr> "]" ]
+
+    ExprNode *atom = arithAtom();
+
+    Token openBracket = tokenizer.getToken();
+    if (!openBracket.isOpenBracket()) {
+        tokenizer.ungetToken();
+        return atom;
+    }
+
+    ExprNode *expression = relExpr();
+
+    Token closeBracket = tokenizer.getToken();
+    if (!closeBracket.isCloseBracket()) {
+        die("Parser::postfixExpr", "expected ']'", closeBracket);
+    }
+
+    return new SubscriptExpr(openBracket, atom, expression);
 }
 
 ExprNode *Parser::arithAtom() {
@@ -403,7 +424,29 @@ ExprNode *Parser::arithAtom() {
             die("Parser::arithAtom", "expected ')'", paren);
         return new FloatConversion(token, expression);
     }
-    
+
+    if (token.isLenKeyword()){
+        Token paren = tokenizer.getToken();
+        if (!paren.isOpenParen())
+            die("Parser::arithAtom", "expected '('", paren);
+        ExprNode *expression = relExpr();
+        paren = tokenizer.getToken();
+        if (!paren.isCloseParen())
+            die("Parser::arithAtom", "expected ')'", paren);
+        return new LenExpr(token, expression);
+    }
+
+    if (token.isSplitKeyword()){
+        Token paren = tokenizer.getToken();
+        if (!paren.isOpenParen())
+            die("Parser::arithAtom", "expected '('", paren);
+        ExprNode *expression = relExpr();
+        paren = tokenizer.getToken();
+        if (!paren.isCloseParen())
+            die("Parser::arithAtom", "expected ')'", paren);
+        return new SplitExpr(token, expression);
+    }
+
     if (token.isOpenParen()) {
         ExprNode *expression = relExpr();
         Token closeParen = tokenizer.getToken();
