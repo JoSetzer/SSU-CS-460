@@ -53,6 +53,7 @@ class PrintStatement final : public Statement {
     ExprNode *expression;
 };
 
+
 class ForStatement final : public Statement {
     public:
     // ForStatement(AssignmentStatement* initializer, ExprNode* condition, AssignmentStatement* update, Statements* body);
@@ -69,5 +70,62 @@ class ForStatement final : public Statement {
     RangeExpression* range;
     Statements* body;
 };
+
+class WhileStatement final : public Statement {
+    public:
+    WhileStatement(ExprNode *condition, Statements *body);
+    ~WhileStatement() override;
+    void evaluate(SymbolTable &symbolTable) const override;
+    void print() const override;
+    private:
+    ExprNode *condition;
+    Statements *body;
+};
+
+class ElifStatement final : public Statement {
+    public:
+    ElifStatement(ExprNode *condition, Statements *body);
+    ~ElifStatement() override;
+    void evaluate(SymbolTable &symbolTable) const override;
+    void print() const override;
+    bool didEvaluate(SymbolTable &symbolTable) const;
+
+    private:
+    ExprNode *condition;
+    Statements *body;
+};
+
+class ElseStatement final : public Statement {
+    public:
+    ElseStatement(Statements *body);
+    ~ElseStatement() override;
+    void evaluate(SymbolTable &symbolTable) const override;
+    void print() const override;
+
+    private:
+    Statements *body;
+};
+
+class IfStatement final : public Statement {
+    public:
+    IfStatement(ExprNode *condition, Statements *body);
+    IfStatement(ExprNode *condition, Statements *body, ElseStatement *elseStatement);
+    IfStatement(ExprNode *condition, Statements *body, std::vector<ElifStatement* > &elifStatements, ElseStatement *elseStatement);
+
+    ~IfStatement() override;
+
+    void evaluate(SymbolTable &symbolTable) const override;
+    void print() const override;
+
+
+
+    private:
+    ExprNode *condition;
+    Statements* body;
+    std::vector<ElifStatement *> elifStatements;
+    ElseStatement *elseStatement;
+};
+
+
 
 #endif // EXPRINTER_STATEMENTS_HPP

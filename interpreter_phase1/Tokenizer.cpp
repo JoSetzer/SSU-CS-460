@@ -300,6 +300,8 @@ Token Tokenizer::getToken() {
             	std::string identifier = readIdentifier(character);
             if (identifier == "for")
                 token.setKeyword(Keyword::forKeyword);
+            else if (identifier == "while")
+				token.setKeyword(Keyword::whileKeyword);
             else if (identifier == "print")
                 token.setKeyword(Keyword::printKeyword);
             else if (identifier == "in")
@@ -308,6 +310,16 @@ Token Tokenizer::getToken() {
                 token.setKeyword(Keyword::rangeKeyword);
             else if (identifier == "str")
                 token.setKeyword(Keyword::strKeyword);
+            else if (identifier == "int")
+				token.setKeyword(Keyword::intKeyword);
+            else if (identifier == "float")
+				token.setKeyword(Keyword::floatKeyword);
+            else if (identifier == "if")
+				token.setKeyword(Keyword::ifKeyword);
+            else if (identifier == "elif")
+				token.setKeyword(Keyword::elifKeyword);
+            else if (identifier == "else")
+				token.setKeyword(Keyword::elseKeyword);
             else if (identifier == "True")
                 token.setBooleanValue(true);
             else if (identifier == "False")

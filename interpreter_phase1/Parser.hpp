@@ -17,6 +17,8 @@ public:
     Statement *statement();
     AssignmentStatement *assignmentStatement();
     ForStatement *forStatement();
+    WhileStatement *whileStatement();
+    IfStatement *ifStatement();
     Statements *suite();
     RangeExpression *range();
 
