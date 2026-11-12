@@ -23,6 +23,10 @@ void Token::print(std::ostream &output) const {
 	output << "range";
     else if (isStrKeyword())
 	output << "str";
+    else if (isIntKeyword())
+        output << "int";
+    else if (isFloatKeyword())
+        output << "float";
     else if (isInKeyword())
 	output << "in";
     else if (isOpenParen())

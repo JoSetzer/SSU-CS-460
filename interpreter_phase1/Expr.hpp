@@ -101,6 +101,28 @@ class StringConversion final : public ExprNode {
     ExprNode *literal;
 };
 
+class IntegerConversion final : public ExprNode {
+    public:
+    explicit IntegerConversion(Token token, ExprNode *operand);
+    ~IntegerConversion() override;
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    private:
+    ExprNode *literal;
+};
+
+class FloatConversion final : public ExprNode {
+    public:
+    explicit FloatConversion(Token token, ExprNode *operand);
+    ~FloatConversion() override;
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    private:
+    ExprNode *literal;
+};
+
 class Variable final : public ExprNode {
 public:
     explicit Variable(Token token);

@@ -310,6 +310,10 @@ Token Tokenizer::getToken() {
                 token.setKeyword(Keyword::rangeKeyword);
             else if (identifier == "str")
                 token.setKeyword(Keyword::strKeyword);
+            else if (identifier == "int")
+				token.setKeyword(Keyword::intKeyword);
+            else if (identifier == "float")
+				token.setKeyword(Keyword::floatKeyword);
             else if (identifier == "if")
 				token.setKeyword(Keyword::ifKeyword);
             else if (identifier == "elif")

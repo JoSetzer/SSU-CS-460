@@ -380,7 +380,29 @@ ExprNode *Parser::arithAtom() {
         if (!paren.isCloseParen())
             die("Parser::arithAtom", "expected ')'", paren);
         return new StringConversion(token, expression);
-    }	    
+    }
+
+    if (token.isIntKeyword()){
+        Token paren = tokenizer.getToken();
+        if (!paren.isOpenParen())
+            die("Parser::arithAtom", "expected '('", paren);
+        ExprNode *expression = relExpr();
+        paren = tokenizer.getToken();
+        if (!paren.isCloseParen())
+            die("Parser::arithAtom", "expected ')'", paren);
+        return new IntegerConversion(token, expression);
+    }
+
+    if (token.isFloatKeyword()){
+        Token paren = tokenizer.getToken();
+        if (!paren.isOpenParen())
+            die("Parser::arithAtom", "expected '('", paren);
+        ExprNode *expression = relExpr();
+        paren = tokenizer.getToken();
+        if (!paren.isCloseParen())
+            die("Parser::arithAtom", "expected ')'", paren);
+        return new FloatConversion(token, expression);
+    }
     
     if (token.isOpenParen()) {
         ExprNode *expression = relExpr();

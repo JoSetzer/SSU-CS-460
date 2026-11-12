@@ -5,6 +5,8 @@
 
 #include "Expr.hpp"
 
+#include <limits>
+
 ExprNode::ExprNode(Token token) : expressionToken{std::move(token)} {}
 
 const Token &ExprNode::token() const {
@@ -641,6 +643,172 @@ ValueDescriptor *StringConversion::evaluate(const SymbolTable &symbolTable) cons
 
 void StringConversion::print() const {
     std::cout << "str(";
+    literal->print();
+    std::cout << ')';
+}
+
+IntegerConversion::IntegerConversion(Token token, ExprNode *operand): ExprNode{std::move(token)}, literal(operand) {}
+
+IntegerConversion::~IntegerConversion() {
+    delete literal;
+}
+
+ValueDescriptor *IntegerConversion::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor* integer = literal->evaluate(symbolTable);
+
+    if (integer->type() == ValueDescriptor::Type::integer) {
+        return integer;
+    }
+
+    if (integer->type() != ValueDescriptor::Type::string) {
+        std::string typeName = integer->typeName();
+        delete integer;
+        throw std::runtime_error("int() cannot convert a " + typeName + " at line " + std::to_string(token().lineNumber()));
+    }
+
+    std::string operand = dynamic_cast<const StringValueDescriptor *>(integer)->value();
+    delete integer;
+
+    int place = 0;
+    int size = operand.size();
+    std::int64_t value = 0;
+    char sign;
+
+    if (operand[place] == '+' || operand[place] == '-') {
+        sign = operand[place];
+        place++;
+    }
+    else {
+        sign = ' ';
+    }
+
+    if (place == size) {
+        throw std::runtime_error("Error in IntegerConversion::evaluate(): Invalid operand size at line " + std::to_string(token().lineNumber()));
+    }
+
+    for (; place < size; place++) {
+
+        if (operand[place] < '0' || operand[place] > '9') {
+            std::string message = "Error in IntegerConversion::evaluate(): does not accept " + operand + " at line " + std::to_string(token().lineNumber());
+            throw std::runtime_error(message);
+        }
+
+        std::int64_t digit = operand[place] - '0';
+
+        if (value > (std::numeric_limits<std::int64_t>::max() - digit) / 10) {
+            std::string message = "Error in IntegerConversion::evaluate(): value is too large at line " + std::to_string(token().lineNumber());
+            throw std::runtime_error(message);
+        }
+
+        value = value * 10 + digit;
+    }
+
+    if (sign == '-') {
+        value = value * -1;
+    }
+
+    return new IntegerValueDescriptor(value);
+}
+
+void IntegerConversion::print() const {
+    std::cout << "int(";
+    literal->print();
+    std::cout << ')';
+}
+
+FloatConversion::FloatConversion(Token token, ExprNode *operand) : ExprNode {std::move(token)}, literal(operand) {}
+
+FloatConversion::~FloatConversion() {
+    delete literal;
+}
+
+ValueDescriptor *FloatConversion::evaluate(const SymbolTable &symbolTable) const {
+    ValueDescriptor* floatpoint = literal->evaluate(symbolTable);
+
+    // if it's already a float
+    if (floatpoint->type() == ValueDescriptor::Type::doubleValue) {
+        return floatpoint;
+    }
+
+    // it's an integer
+    if (floatpoint->type() == ValueDescriptor::Type::integer) {
+        auto value = static_cast<double>(dynamic_cast<const IntegerValueDescriptor *>(floatpoint)->value());
+        delete floatpoint;
+
+        return new DoubleValueDescriptor(value);
+    }
+
+    // if it is not a string then throw an error
+    if (floatpoint->type() != ValueDescriptor::Type::string) {
+        std::string typeName = floatpoint->typeName();
+        delete floatpoint;
+        throw std::runtime_error("float() cannot convert a " + typeName + " at line " + std::to_string(token().lineNumber()));
+    }
+
+    // get the string
+    std::string operand = dynamic_cast<const StringValueDescriptor *>(floatpoint)->value();
+    delete floatpoint;
+
+    //setup
+    int place = 0;
+    int size = operand.size();
+    int decimalCount = 0;
+    int invalidCharCount = 0;
+    bool beforeDecimal = false;
+    bool afterDecimal = false;
+
+    // check for a sign
+    if (operand[place] == '+' || operand[place] == '-') {
+        place++;
+    }
+
+    // if it only has a sign then throw
+    if (place == size) {
+        throw std::runtime_error("Error in FloatConversion::evaluate(): Invalid operand size at line " + std::to_string(token().lineNumber()));
+    }
+
+    if (operand[place] >= '0' && operand[place] <= '9') {
+        beforeDecimal = true;
+    }
+
+    while (place < size) {
+        if (operand[place] == '.') {
+            decimalCount++;
+            place++;
+
+            if (place != size) {
+                afterDecimal = true;
+            }
+            continue;
+        }
+
+        if (operand[place] < '0' || operand[place] > '9') {
+            invalidCharCount++;
+        }
+        place++;
+    }
+
+    if (decimalCount > 1) {
+        throw std::runtime_error("Error in FloatConversion::evaluate(): Invalid operand " + operand + " at line " + std::to_string(token().lineNumber()));
+    }
+
+    if (invalidCharCount > 0) {
+        std::string message = "Error in FloatConversion::evaluate(): does not accept " + operand + " at line " + std::to_string(token().lineNumber());
+        throw std::runtime_error(message);
+    }
+
+    if (!beforeDecimal || (decimalCount == 1 && !afterDecimal)) {
+        std::string message = "Error in FloatConversion::evaluate(): does not accept " + operand + " at line " + std::to_string(token().lineNumber());
+        throw std::runtime_error(message);
+    }
+
+    double value = std::stod(operand);
+
+    return new DoubleValueDescriptor(value);
+}
+
+void FloatConversion::print() const {
+    std::cout << "float(";
     literal->print();
     std::cout << ')';
 }

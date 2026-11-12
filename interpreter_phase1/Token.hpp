@@ -13,6 +13,8 @@ enum class Keyword {
     inKeyword,
     rangeKeyword,
     strKeyword,
+    intKeyword,
+    floatKeyword,
     printKeyword,
     ifKeyword,
     elifKeyword,
@@ -78,6 +80,8 @@ public:
     [[nodiscard]] bool isInKeyword() const { return _keyword == Keyword::inKeyword; }
     [[nodiscard]] bool isRangeKeyword() const { return _keyword == Keyword::rangeKeyword; }
     [[nodiscard]] bool isStrKeyword() const { return _keyword == Keyword::strKeyword; }
+    [[nodiscard]] bool isIntKeyword() const { return _keyword == Keyword::intKeyword; }
+    [[nodiscard]] bool isFloatKeyword() const { return _keyword == Keyword::floatKeyword; }
     [[nodiscard]] bool isPrintKeyword() const { return _keyword == Keyword::printKeyword; }
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
