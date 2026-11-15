@@ -107,6 +107,8 @@ public:
 	ValueDescriptor* getElement(std::size_t index) const;
 	void setElement(std::size_t index, ValueDescriptor* value);
 	std::size_t size() const;
+	bool equals(const ListValueDescriptor& other) const;
+
 private:
 	bool checkCompatibility (const ValueDescriptor* value) const;
 

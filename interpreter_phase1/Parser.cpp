@@ -518,6 +518,16 @@ ExprNode *Parser::arithAtom() {
         return new SplitExpr(token, expression);
     }
 
+    if (token.isInputKeyword()){
+        Token paren = tokenizer.getToken();
+        if (!paren.isOpenParen())
+            die("Parser::arithAtom", "expected '('", paren);
+        paren = tokenizer.getToken();
+        if (!paren.isCloseParen())
+            die("Parser::arithAtom", "expected ')'", paren);
+        return new InputExpr(token);
+    }
+
     if (token.isPopKeyword()){
         Token paren = tokenizer.getToken();
         if (!paren.isOpenParen())

@@ -37,6 +37,8 @@ void Token::print(std::ostream &output) const {
         output << "append";
     else if (isPopKeyword())
         output << "pop";
+    else if (isInputKeyword())
+        output << "input";
     else if (isOpenParen())
         output << '(';
     else if (isCloseParen())

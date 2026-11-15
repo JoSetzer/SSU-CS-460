@@ -247,10 +247,15 @@ ValueDescriptor *BinaryExprNode::equalsOperation(ValueDescriptor *left, ValueDes
     ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
     ValueDescriptor::Type boolVal = ValueDescriptor::Type::boolean;
     ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
+    ValueDescriptor::Type list = ValueDescriptor::Type::list;
 
     // operands are of the same type
     if (left->type() == right->type()) {
-        if (left->type() == integer && right->type() == integer) {
+        if (left->type() == list)
+	    return new BooleanValueDescriptor(
+			    dynamic_cast<const ListValueDescriptor*>(left)->equals(
+			    *dynamic_cast<const ListValueDescriptor*>(right)));
+	if (left->type() == integer && right->type() == integer) {
             bool result = dynamic_cast<const IntegerValueDescriptor*>(left)->value() == dynamic_cast<const IntegerValueDescriptor*>(right)->value();
             return new BooleanValueDescriptor(result);
         }
@@ -289,7 +294,12 @@ ValueDescriptor *BinaryExprNode::notEqualsOperation(ValueDescriptor *left, Value
     ValueDescriptor::Type doubleVal = ValueDescriptor::Type::doubleValue;
     ValueDescriptor::Type boolVal = ValueDescriptor::Type::boolean;
     ValueDescriptor::Type stringVal = ValueDescriptor::Type::string;
-
+    ValueDescriptor::Type list = ValueDescriptor::Type::list;
+    //lists
+    if (left->type() == list && right->type() == list)
+	return new BooleanValueDescriptor(
+	    !dynamic_cast<const ListValueDescriptor*>(left)->equals(
+	    *dynamic_cast<const ListValueDescriptor*>(right)));
     //integers
     if (left->type() == integer && right->type() == integer) {
         bool result = dynamic_cast<const IntegerValueDescriptor*>(left)->value() !=
@@ -1183,4 +1193,18 @@ ValueDescriptor* PopExpr::evaluate(const SymbolTable& symbolTable) const{
 	}
 	delete object;
 	return result;
+}
+
+InputExpr::InputExpr(Token token) : ExprNode(std::move(token)){}
+
+void InputExpr::print() const{
+    std::cout << "input()";
+}
+
+ValueDescriptor* InputExpr::evaluate(const SymbolTable& symbolTable) const {
+    std::string input;
+    if (!std::getline(std::cin, input))
+	    throw std::runtime_error("input() failed to real line");
+
+    return new StringValueDescriptor(input);
 }

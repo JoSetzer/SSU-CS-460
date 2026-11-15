@@ -312,23 +312,25 @@ Token Tokenizer::getToken() {
             else if (identifier == "str")
                 token.setKeyword(Keyword::strKeyword);
             else if (identifier == "int")
-				token.setKeyword(Keyword::intKeyword);
+		token.setKeyword(Keyword::intKeyword);
             else if (identifier == "float")
-				token.setKeyword(Keyword::floatKeyword);
+		token.setKeyword(Keyword::floatKeyword);
             else if (identifier == "if")
-				token.setKeyword(Keyword::ifKeyword);
+		token.setKeyword(Keyword::ifKeyword);
             else if (identifier == "elif")
-				token.setKeyword(Keyword::elifKeyword);
+		token.setKeyword(Keyword::elifKeyword);
             else if (identifier == "else")
-				token.setKeyword(Keyword::elseKeyword);
+		token.setKeyword(Keyword::elseKeyword);
             else if (identifier == "len")
-				token.setKeyword(Keyword::lenKeyword);
+		token.setKeyword(Keyword::lenKeyword);
             else if (identifier == "split")
-				token.setKeyword(Keyword::splitKeyword);
+		token.setKeyword(Keyword::splitKeyword);
             else if (identifier == "append")
-				token.setKeyword(Keyword::appendKeyword);
+		token.setKeyword(Keyword::appendKeyword);
             else if (identifier == "pop")
-				token.setKeyword(Keyword::popKeyword);
+		token.setKeyword(Keyword::popKeyword);
+            else if (identifier == "input")
+		token.setKeyword(Keyword::inputKeyword);
             else if (identifier == "True")
                 token.setBooleanValue(true);
             else if (identifier == "False")

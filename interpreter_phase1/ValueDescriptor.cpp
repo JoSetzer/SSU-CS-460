@@ -223,6 +223,68 @@ std::size_t ListValueDescriptor::size() const{
 	return data->elements.size();
 }
 
+bool ListValueDescriptor::equals(const ListValueDescriptor& other) const{
+	if (size() != other.size())
+		return false;
+	for (std::size_t i = 0; i < size(); i++) {
+		const ValueDescriptor* left = data->elements[i];
+		const ValueDescriptor* right = other.data->elements[i];
+		Type lType = left->type();
+		Type rType = right->type();
+		
+		if ((lType == Type::integer || lType == Type::doubleValue)
+		 && (rType == Type::integer || rType == Type::doubleValue)) {
+				
+			if (lType == Type::integer && rType == Type::integer) {
+				if (static_cast<const IntegerValueDescriptor*>(left)->value()
+			 	 != static_cast<const IntegerValueDescriptor*>(right)->value())
+					return false;
+			} else {
+				double l,r;
+				if (lType == Type::integer) {
+					const IntegerValueDescriptor* integer = static_cast<const IntegerValueDescriptor*>(left);
+					l = static_cast<double>(integer->value());
+				}
+				else {
+					const DoubleValueDescriptor* doubleValue = static_cast<const DoubleValueDescriptor*>(left);
+					l = doubleValue->value();
+				}
+				
+				if (rType == Type::integer) {
+					const IntegerValueDescriptor* integer = static_cast<const IntegerValueDescriptor*>(right);
+					r = static_cast<double>(integer->value());
+				}
+				else {
+					const DoubleValueDescriptor* doubleValue = static_cast<const DoubleValueDescriptor*>(right);
+					r = doubleValue->value();
+				}
+
+				if (l !=r )
+					return false;
+			}
+			continue;
+		}
+
+		if (lType != rType)
+			return false;
+
+		if (lType == Type::string){
+			if (static_cast<const StringValueDescriptor*>(left)->value()
+			 != static_cast<const StringValueDescriptor*>(right)->value())
+				return false;
+		}
+		else if (lType == Type::boolean){
+			if (static_cast<const BooleanValueDescriptor*>(left)->value()
+			 != static_cast<const BooleanValueDescriptor*>(right)->value())
+				return false;
+	
+		} 
+		else
+			return false;
+	}
+	return true;
+}
+
 bool ListValueDescriptor::checkCompatibility(const ValueDescriptor* value) const {
 	if (value->type() == Type::list)
 		return false;

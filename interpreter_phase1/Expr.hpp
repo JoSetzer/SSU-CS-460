@@ -236,4 +236,12 @@ class PopExpr final : public ExprNode {
     private:
     ExprNode* expression;
 };
+
+class InputExpr final : public ExprNode {
+    public:
+    explicit InputExpr(Token token);
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+};
 #endif // EXPRINTER_EXPR_HPP
