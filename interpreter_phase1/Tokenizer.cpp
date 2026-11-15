@@ -327,6 +327,8 @@ Token Tokenizer::getToken() {
 				token.setKeyword(Keyword::splitKeyword);
             else if (identifier == "append")
 				token.setKeyword(Keyword::appendKeyword);
+            else if (identifier == "pop")
+				token.setKeyword(Keyword::popKeyword);
             else if (identifier == "True")
                 token.setBooleanValue(true);
             else if (identifier == "False")

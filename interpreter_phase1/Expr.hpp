@@ -224,4 +224,16 @@ class SubscriptExpr : public ExprNode {
     ExprNode *object;
     ExprNode *subscript;
 };
+
+class PopExpr final : public ExprNode {
+    public:
+    explicit PopExpr(Token token, ExprNode* expression);
+    ~PopExpr() override;
+
+    void print() const override;
+    [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+
+    private:
+    ExprNode* expression;
+};
 #endif // EXPRINTER_EXPR_HPP

@@ -451,15 +451,15 @@ ExprNode *Parser::arithAtom() {
 		return list;
 	tokenizer.ungetToken();
 	while (true) {
-		ExprNode *expression = relExpr();
-		list->addExpr(expression);
-		Token comma = tokenizer.getToken();
-		if (comma.isCloseBracket())
-			return list;
-		if (!comma.isComma()) {
-			delete list;
-        		die("Parser::arithAtom", "expected ',' or ']'", comma);
-		}
+	    ExprNode *expression = relExpr();
+	    list->addExpr(expression);
+	    Token comma = tokenizer.getToken();
+	    if (comma.isCloseBracket())
+		return list;
+	    if (!comma.isComma()) {
+		delete list;
+        	die("Parser::arithAtom", "expected ',' or ']'", comma);
+	    }
 	}
     }
 
@@ -516,6 +516,17 @@ ExprNode *Parser::arithAtom() {
         if (!paren.isCloseParen())
             die("Parser::arithAtom", "expected ')'", paren);
         return new SplitExpr(token, expression);
+    }
+
+    if (token.isPopKeyword()){
+        Token paren = tokenizer.getToken();
+        if (!paren.isOpenParen())
+            die("Parser::arithAtom", "expected '('", paren);
+        ExprNode *expression = relExpr();
+        paren = tokenizer.getToken();
+        if (!paren.isCloseParen())
+            die("Parser::arithAtom", "expected ')'", paren);
+        return new PopExpr(token, expression);
     }
 
     if (token.isOpenParen()) {

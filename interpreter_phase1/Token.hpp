@@ -22,6 +22,7 @@ enum class Keyword {
     whileKeyword,
     lenKeyword,
     appendKeyword,
+    popKeyword,
     splitKeyword
 };
 
@@ -91,6 +92,7 @@ public:
     [[nodiscard]] bool isLenKeyword() const { return _keyword == Keyword::lenKeyword; }
     [[nodiscard]] bool isSplitKeyword() const { return _keyword == Keyword::splitKeyword; }
     [[nodiscard]] bool isAppendKeyword() const { return _keyword == Keyword::appendKeyword; }
+    [[nodiscard]] bool isPopKeyword() const { return _keyword == Keyword::popKeyword; }
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
     void setIntegerValue(std::int64_t value) {

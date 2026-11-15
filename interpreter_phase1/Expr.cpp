@@ -1148,6 +1148,39 @@ ValueDescriptor *SubscriptExpr::evaluate(const SymbolTable &symbolTable) const {
     delete obj;
 
     throw std::runtime_error("Error at SubscriptExpr::evaluate(): subscript type mismatch");
+}
 
+PopExpr::PopExpr(Token token, ExprNode* expression) : 
+    ExprNode(std::move(token)), expression(expression) {}
 
+PopExpr::~PopExpr() {
+    delete expression;
+}
+
+void PopExpr::print() const{
+    std::cout << "pop(";
+    expression->print();
+    std::cout << ")";
+}
+
+ValueDescriptor* PopExpr::evaluate(const SymbolTable& symbolTable) const{
+	ValueDescriptor* object = expression->evaluate(symbolTable);
+
+	if (object->type() != ValueDescriptor::Type::list){
+	    std::string type = object->typeName();
+	    delete object;
+	    throw std::runtime_error("pop() requires list, got: " + type);
+	}
+
+	ListValueDescriptor* list = dynamic_cast<ListValueDescriptor*>(object);
+	ValueDescriptor* result;
+
+	try{
+	    result = list->pop();
+	} catch (...) {
+	    delete object;
+	    throw;
+	}
+	delete object;
+	return result;
 }
