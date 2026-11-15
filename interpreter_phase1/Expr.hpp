@@ -152,8 +152,10 @@ class SplitExpr final : public ExprNode {
     public:
     explicit SplitExpr(Token token, ExprNode *expression);
     ~SplitExpr() override;
+    
     void print() const override;
     [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    
     private:
     ExprNode *expression;
 };
@@ -213,10 +215,11 @@ private:
 class SubscriptExpr : public ExprNode {
     public:
     explicit SubscriptExpr(Token token, ExprNode *object, ExprNode *subscript);
-
     ~SubscriptExpr() override;
+    
     void print() const override;
     [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+    
     private:
     ExprNode *object;
     ExprNode *subscript;

@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-
+#include <sstream>
 #include "Expr.hpp"
 
 #include <limits>
@@ -865,17 +865,21 @@ LenExpr::~LenExpr() {
 
 ValueDescriptor *LenExpr::evaluate(const SymbolTable &symbolTable) const {
     ValueDescriptor* object = expression->evaluate(symbolTable);
-
+    std::size_t len;
     // if it's a string
     if (object->type() == ValueDescriptor::Type::string) {
-        size_t num = dynamic_cast<const StringValueDescriptor *>(object)->value().size();
-        int size = static_cast<int>(num);
+	len = dynamic_cast<StringValueDescriptor*>(object)->value().size();
         delete object;
-
-        return new IntegerValueDescriptor(size);
+        return new IntegerValueDescriptor(static_cast<std::int64_t>(len));
     }
-
-    // NEED TO IMPLEMENT LIST
+    // if it's a list
+    if (object->type() == ValueDescriptor::Type::list) {
+    	ListValueDescriptor* list = dynamic_cast<ListValueDescriptor*>(object);
+	len = list->size();
+	delete object;
+	return new IntegerValueDescriptor(static_cast<std::int64_t>(len));
+    }
+    
 
     // if anything not a string or list
     std::string message = "Error in LenExpr::evaluate(): invalid type" + object->typeName() + " at line " + std::to_string(token().lineNumber());
@@ -895,17 +899,44 @@ SplitExpr::~SplitExpr() {
     delete expression;
 }
 
+void SplitExpr::print() const {
+    std::cout << "split(";
+    expression->print();
+    std::cout << ")";
+}
+
 ValueDescriptor *SplitExpr::evaluate(const SymbolTable &symbolTable) const {
     ValueDescriptor* object = expression->evaluate(symbolTable);
 
     if (object->type() != ValueDescriptor::Type::string) {
-        std::string message = "Error in SplitExpr::evaluate(): invalid expression " + object->typeName() + " at line " + std::to_string(token().lineNumber());
-        throw std::runtime_error(message);
+	std::string message = object->typeName();
+	delete object;
+        throw std::runtime_error("split() rquires string, got: " + message);
     }
+    
+    std::string original = dynamic_cast<StringValueDescriptor*>(object)->value();
+    delete object;
 
-    // NEED TO IMPLEMENT LIST
-    // split takes a string and returns a list of each word in that string
-    // ignores white space
+    ListValueDescriptor* list = new ListValueDescriptor();
+
+    std::istringstream stream(original);
+    std::string word;
+    
+    try{
+    	while (stream >> word) {
+	    ValueDescriptor* value = new StringValueDescriptor(word);
+	    try {
+	    	list->append(value);
+	    } catch (...) {
+		delete value;
+		throw;
+	    }
+	}
+    } catch (...) {
+	delete list;
+	throw;
+    }
+    return list;
 }
 
 Variable::Variable(Token token) : ExprNode{std::move(token)} {}
@@ -1054,6 +1085,13 @@ SubscriptExpr::SubscriptExpr(Token token, ExprNode *object, ExprNode *subscript)
 SubscriptExpr::~SubscriptExpr() {
     delete object;
     delete subscript;
+}
+
+void SubscriptExpr::print() const {
+	object->print();
+	std::cout << "[";
+	subscript->print();
+	std::cout << "]";
 }
 
 ValueDescriptor *SubscriptExpr::evaluate(const SymbolTable &symbolTable) const {
