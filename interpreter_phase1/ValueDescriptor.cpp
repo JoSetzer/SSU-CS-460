@@ -4,6 +4,7 @@
 
 #include "ValueDescriptor.h"
 #include <sstream>
+#include <stdexcept>
 
 /** IntegerValueDescriptor Implementation
  * constructor takes in a int64_t value
@@ -124,4 +125,114 @@ ValueDescriptor *StringValueDescriptor::clone() const {
 
 const std::string &StringValueDescriptor::value() const {
     return stringValue;
+}
+/** ListValueDescriptor Implementation
+ * constructor takes in no parameters or a pointer to ListData
+ * type() returns the enum Type "list"
+ * typeName() returns string "list"
+ * toString() returns the stringValue of all list objects
+ */
+ListValueDescriptor::ListValueDescriptor () : data(new ListData()) {}
+
+ListValueDescriptor::ListValueDescriptor (ListData* copyData) : data(copyData) {
+	data->referenceCount++;
+}
+
+ListValueDescriptor::~ListValueDescriptor () {
+	data->referenceCount--;
+	if (data->referenceCount == 0) {
+		for (ValueDescriptor* index : data->elements) {
+			delete index;
+		}
+		delete data;
+	}
+}
+
+ListValueDescriptor::Type ListValueDescriptor::type() const {
+	return Type::list;
+}
+
+std::string ListValueDescriptor::typeName() const {
+    return "list";
+}
+
+std::string ListValueDescriptor::toString() const {
+	std::string outputString = "[";
+
+	for (std::size_t i = 0; i < data->elements.size(); i++) {
+		ValueDescriptor* element = data->elements[i];
+		if (i > 0)
+			outputString += ", ";
+		if (element->type() == ValueDescriptor::Type::string)
+			outputString += "\"" + element->toString() + "\"";
+		else
+			outputString += element->toString();
+
+	}
+	outputString += "]";
+	return outputString;
+}
+
+ValueDescriptor* ListValueDescriptor::clone() const {
+	return new ListValueDescriptor(data);
+}
+
+void ListValueDescriptor::append(ValueDescriptor* value) {
+	if (!checkCompatibility(value))
+		throw std::runtime_error("cannot append" + value->typeName() + "to a non-" + value->typeName() +" list");
+	
+	data->elements.push_back(value);
+
+	if (data->listType == ListObjectType::untyped){
+		if (value->type() == Type::integer || value->type() == Type::doubleValue)
+			data->listType = ListObjectType::numeric;
+		if (value->type() == Type::string)
+			data->listType = ListObjectType::string;
+		if (value->type() == Type::boolean)
+			data->listType = ListObjectType::boolean;
+	}
+}
+
+ValueDescriptor* ListValueDescriptor::pop() {
+	if (data->elements.empty())
+		throw std::runtime_error("Cannot pop from empty list");
+	
+	ValueDescriptor* back = data->elements.back();
+	data->elements.pop_back();
+	return back;
+}
+
+ValueDescriptor* ListValueDescriptor::getElement(std::size_t index) const {
+	if (data->elements.size() <= index)
+		throw std::runtime_error("Index out of range");
+	return data->elements[index]->clone(); //list owns object return clone instead
+}
+
+void ListValueDescriptor::setElement(std::size_t index, ValueDescriptor* value) {
+	if (data->elements.size() <= index)
+		throw std::runtime_error("Index out of range");
+	
+	if (!checkCompatibility(value))
+		throw std::runtime_error("cannot append" + value->typeName() + "to a non-" + value->typeName() +" list");
+	
+	delete data->elements[index];
+	data->elements[index] = value;
+}
+
+std::size_t ListValueDescriptor::size() const{
+	return data->elements.size();
+}
+
+bool ListValueDescriptor::checkCompatibility(const ValueDescriptor* value) const {
+	if (value->type() == Type::list)
+		return false;
+	if (data->listType == ListObjectType::untyped)
+		return true;
+	if (data->listType == ListObjectType::numeric)
+		return value->type() == Type::integer || value->type() == Type::doubleValue;
+	if (data->listType == ListObjectType::string)
+		return value->type() == Type::string;
+	if (data->listType == ListObjectType::boolean)
+		return value->type() == Type::boolean;
+	return false;
 }

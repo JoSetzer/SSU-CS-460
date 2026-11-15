@@ -74,6 +74,16 @@ Statement *Parser::statement() {
     if (token.isIfKeyword())
         return ifStatement();
 
+    if (token.isAppendKeyword()) {
+        Statement* append = appendStatement();
+
+	Token newline = tokenizer.getToken();
+	if (!newline.isNewline())
+	    die("Parser::statement", "expected NEWLINE after append", newline);
+	
+	return append;
+    }
+
     if (token.isPrintKeyword()) {
         Statement* print = new PrintStatement(relExpr());
 
@@ -122,9 +132,25 @@ AssignmentStatement *Parser::assignmentStatement() {
     if (!variable.isIdentifier())
         die("Parser::assignmentStatement", "expected an identifier", variable);
 
-    Token assignmentOperator = tokenizer.getToken();
-    if (!assignmentOperator.isAssignmentOperator())
-        die("Parser::assignmentStatement", "expected '='", assignmentOperator);
+    Token token = tokenizer.getToken();
+    ExprNode* index = nullptr;
+    if (token.isOpenBracket()) {
+    	index = relExpr();
+	Token closeBracket = tokenizer.getToken();
+	if (!closeBracket.isCloseBracket()) {
+		delete index;
+		die("Parser::assignmentStatment", "expected ']'", closeBracket);
+	}
+    	token = tokenizer.getToken();
+    }
+
+    if (!token.isAssignmentOperator()) {
+	delete index;
+        die("Parser::assignmentStatement", "expected '='", token);
+    } 
+    
+    if (index != nullptr)
+	    return new AssignmentStatement(variable.identifier(), index, relExpr());
 
     return new AssignmentStatement(variable.identifier(), relExpr());
 }
@@ -264,6 +290,32 @@ IfStatement *Parser::ifStatement() {
     return new IfStatement(condition, body, elifStatements, elseStatement);
 }
 
+AppendStatement* Parser::appendStatement() {
+	Token token = tokenizer.getToken();
+
+	if (!token.isOpenParen())
+            die("Parser::appendStatement", "expected '('", token);
+		
+	Token listName = tokenizer.getToken();
+	if (!listName.isIdentifier())
+            die("Parser::appendStatement", "expected list name", listName);
+
+	token = tokenizer.getToken();
+	
+	if (!token.isComma())
+            die("Parser::appendStatement", "expected ','", token);
+
+	ExprNode* appendValue = relExpr();
+
+	token = tokenizer.getToken();
+	if (!token.isCloseParen()) {
+	    delete appendValue;
+            die("Parser::appendStatement", "expected ')'", token);
+	}
+
+	return new AppendStatement(listName.identifier(), appendValue);
+}
+
 ExprNode *Parser::relExpr() {
     // <rel-expr> -> <rel-term> [ <equality-op> <rel-term> ]
     // The optional equality operation is left for students to implement.
@@ -391,7 +443,26 @@ ExprNode *Parser::arithAtom() {
     
     if (token.isIdentifier())
         return new Variable(token);
-    
+   
+    if (token.isOpenBracket()) {
+    	ListLiteral* list = new ListLiteral(token);
+	Token next = tokenizer.getToken();
+	if (next.isCloseBracket())
+		return list;
+	tokenizer.ungetToken();
+	while (true) {
+		ExprNode *expression = relExpr();
+		list->addExpr(expression);
+		Token comma = tokenizer.getToken();
+		if (comma.isCloseBracket())
+			return list;
+		if (!comma.isComma()) {
+			delete list;
+        		die("Parser::arithAtom", "expected ',' or ']'", comma);
+		}
+	}
+    }
+
     if (token.isStrKeyword()){
         Token paren = tokenizer.getToken();
         if (!paren.isOpenParen())

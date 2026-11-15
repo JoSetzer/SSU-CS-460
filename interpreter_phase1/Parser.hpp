@@ -21,6 +21,7 @@ public:
     IfStatement *ifStatement();
     Statements *suite();
     RangeExpression *range();
+    AppendStatement *appendStatement();
 
     ExprNode *relExpr();
     ExprNode *relTerm();

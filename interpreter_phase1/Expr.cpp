@@ -625,6 +625,50 @@ ValueDescriptor *BoolLiteral::evaluate(const SymbolTable &) const {
     return new BooleanValueDescriptor(token().booleanValue());
 }
 
+ListLiteral::ListLiteral(Token token) : ExprNode{std::move(token)} {}
+
+ListLiteral::~ListLiteral() {
+	for (ExprNode* expr : expressions)
+		delete expr;
+}
+
+void ListLiteral::addExpr(ExprNode* expression) {
+	expressions.push_back(expression);
+}
+
+void ListLiteral::print() const {
+	std:: cout << "[";
+
+	for (std::size_t i = 0; i < expressions.size(); i++) {
+		if (i > 0)
+			std::cout << ", ";
+		expressions[i]->print();
+	}
+	std::cout << "]";
+}
+
+ValueDescriptor *ListLiteral::evaluate(const SymbolTable &symbolTable) const {
+	ListValueDescriptor* list = new ListValueDescriptor();
+
+	try {
+		for (ExprNode* exprIndex : expressions) {
+			ValueDescriptor* value = exprIndex->evaluate(symbolTable);
+
+			try {
+				list->append(value);
+			} catch (...) {
+				delete value;
+				throw;
+			}
+		}
+	}
+	catch (...) {
+		delete list;
+		throw;
+	}
+	return list;
+}
+
 StringConversion::StringConversion(Token token, ExprNode *operand): ExprNode{std::move(token)}, literal(operand) {}
 
 StringConversion::~StringConversion() {
@@ -1032,6 +1076,23 @@ ValueDescriptor *SubscriptExpr::evaluate(const SymbolTable &symbolTable) const {
     std::int64_t i = dynamic_cast<IntegerValueDescriptor*>(subscr)->value();
     delete subscr;
 
+    if (obj->type() == ValueDescriptor::Type::list) {
+    	if (i < 0) {
+            delete obj;
+            throw std::runtime_error("Error at SubscriptExpr::evaluate(): subscript out of range");	
+	}
+	ListValueDescriptor* list = dynamic_cast<ListValueDescriptor*>(obj);
+	ValueDescriptor* result = nullptr;
+	try{
+		result = list->getElement(static_cast<std::size_t>(i));
+	}
+	catch(...) {
+		delete obj;
+		throw;
+	}
+	delete obj;
+	return result;
+    }
     if (obj->type() == ValueDescriptor::Type::string) {
         const std::string &s = dynamic_cast<StringValueDescriptor*>(obj)->value();
 
@@ -1044,8 +1105,6 @@ ValueDescriptor *SubscriptExpr::evaluate(const SymbolTable &symbolTable) const {
         delete obj;
         return new StringValueDescriptor(character);
     }
-
-    // NEED TO IMPLEMENT LIST
 
     // if it's not a string or a list
     delete obj;

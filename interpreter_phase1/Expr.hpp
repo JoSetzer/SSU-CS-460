@@ -89,6 +89,20 @@ class StringLiteral final : public ExprNode {
     [[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
 };
 
+class ListLiteral final : public ExprNode {
+	public:
+	explicit ListLiteral(Token token);
+	~ListLiteral() override;
+
+	void addExpr(ExprNode* expression);
+	
+	void print() const override;
+	[[nodiscard]] ValueDescriptor *evaluate(const SymbolTable &symbolTable) const override;
+	
+	private:
+	std::vector<ExprNode*> expressions;
+};
+
 class StringConversion final : public ExprNode {
     public:
     explicit StringConversion(Token token, ExprNode *operand);

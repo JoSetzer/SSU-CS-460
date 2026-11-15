@@ -325,6 +325,8 @@ Token Tokenizer::getToken() {
 				token.setKeyword(Keyword::lenKeyword);
             else if (identifier == "split")
 				token.setKeyword(Keyword::splitKeyword);
+            else if (identifier == "append")
+				token.setKeyword(Keyword::appendKeyword);
             else if (identifier == "True")
                 token.setBooleanValue(true);
             else if (identifier == "False")
