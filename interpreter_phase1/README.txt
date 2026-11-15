@@ -11,7 +11,10 @@ Contributions:
 - Partial len and split implementation for strings 
 
 *Jonas Setzer:
-Sooon to be added
+- list literal implementation
+- pop, append, getelement, setelement
+- finalize split and len functions
+- list equality and inequality
 
 AI Use:
 * No AI was used at any stage in development
