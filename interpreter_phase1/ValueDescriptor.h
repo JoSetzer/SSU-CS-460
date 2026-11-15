@@ -8,11 +8,14 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
+#include <cstddef>
 
 class ValueDescriptor {
 public:
     enum class Type {
-        integer,
+	list,
+	integer,
         doubleValue,
         boolean,
         string
@@ -82,7 +85,7 @@ private:
     std::string stringValue;
 };
 
-class ListObjectDescriptor {
+class ListValueDescriptor final : public ValueDescriptor {
     enum class ListObjectType {
         untyped,
         numeric,
@@ -91,13 +94,31 @@ class ListObjectDescriptor {
     };
 
 public:
-    explicit ListObjectDescriptor(ListObjectType type);
-    ~ListObjectDescriptor();
+    	explicit ListValueDescriptor();
+    	~ListValueDescriptor();
 
-    [[nodiscard]] ListObjectType type() const;
-    [[nodiscard]] std::string typeName() const;
-    [[nodiscard]] std::string toString() const;
+    	[[nodiscard]] Type type() const;
+	[[nodiscard]] std::string typeName() const;
+    	[[nodiscard]] std::string toString() const;
+	[[nodiscard]] ValueDescriptor *clone() const override;
 
+	void append(ValueDescriptor* value);
+	ValueDescriptor* pop();
+	ValueDescriptor* getElement(std::size_t index) const;
+	void setElement(std::size_t index, ValueDescriptor* value);
+	std::size_t size() const;
+private:
+	bool checkCompatibility (const ValueDescriptor* value) const;
+
+	struct ListData {
+		ListObjectType listType = ListObjectType::untyped;
+		std::vector<ValueDescriptor*> elements;
+		std::size_t referenceCount = 1;
+	};
+
+	ListData* data;
+
+    	explicit ListValueDescriptor(ListData* copyData); 
 };
 
 #endif //EXPRINTER_VALUEDESCRIPTOR_H

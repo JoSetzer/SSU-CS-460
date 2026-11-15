@@ -33,6 +33,8 @@ void Token::print(std::ostream &output) const {
         output << "len";
     else if (isSplitKeyword())
         output << "split";
+    else if (isAppendKeyword())
+        output << "append";
     else if (isOpenParen())
         output << '(';
     else if (isCloseParen())

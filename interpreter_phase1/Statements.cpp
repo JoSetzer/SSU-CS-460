@@ -30,16 +30,58 @@ AssignmentStatement::AssignmentStatement(
     ExprNode *expression)
     : variableName{std::move(variableName)}, expression{expression} {}
 
+AssignmentStatement::AssignmentStatement(
+    std::string variableName,
+    ExprNode *index,
+    ExprNode *expression)
+    : variableName{std::move(variableName)}, indexExpression(index), expression{expression} {}
+
 AssignmentStatement::~AssignmentStatement() {
+    delete indexExpression;
     delete expression;
 }
 
 void AssignmentStatement::evaluate(SymbolTable &symbolTable) const {
-    symbolTable.setValueFor(variableName, expression->evaluate(symbolTable));
+    if (indexExpression == nullptr) {
+	    symbolTable.setValueFor(variableName, expression->evaluate(symbolTable));
+	    return;
+    }
+
+    ValueDescriptor* target = symbolTable.getValueFor(variableName);
+
+    if(target->type() != ValueDescriptor::Type::list)
+    	throw std::runtime_error(target->typeName() + " not a valid type to index");
+    
+    ListValueDescriptor* list = dynamic_cast<ListValueDescriptor*>(target);
+    ValueDescriptor* indexValue = indexExpression->evaluate(symbolTable);
+    if (indexValue->type() != ValueDescriptor::Type::integer) {
+    	delete indexValue;
+	throw std::runtime_error("List index must be an integer");
+    }
+
+    std::int64_t index = dynamic_cast<IntegerValueDescriptor*>(indexValue)->value();
+    delete indexValue;
+
+    if ((index < 0) || (static_cast<std::size_t>(index) >= list->size()))
+	throw std::runtime_error("List index out of range");
+
+    target = expression->evaluate(symbolTable);
+    try {
+    	list->setElement(static_cast<std::size_t>(index), target);
+    } catch (...) {
+	    delete target;
+	    throw;
+    }
 }
 
 void AssignmentStatement::print() const {
-    std::cout << variableName << " = ";
+    std::cout << variableName;
+    if (indexExpression != nullptr) {
+    	std::cout << "[";
+	indexExpression->print();
+	std::cout << "]";
+    }
+    std::cout << " = ";
     expression->print();
     std::cout << '\n';
 }
@@ -306,4 +348,40 @@ void ElseStatement::evaluate(SymbolTable &symbolTable) const {
 void ElseStatement::print() const {
     std::cout << "else:\n";
     body->print();
+}
+
+AppendStatement::AppendStatement(std::string variableName, ExprNode* expression) : 
+	variableName(std::move(variableName)), expression(expression) {}
+
+AppendStatement::~AppendStatement() {
+    delete expression;
+} 
+
+void AppendStatement::evaluate(SymbolTable& symbolTable) const {
+	if (!symbolTable.isDefined(variableName))
+		throw std::runtime_error("Unknown Variable" + variableName);
+	
+	ValueDescriptor* target = symbolTable.getValueFor(variableName);
+
+	if (target->type() != ValueDescriptor::Type::list)
+		throw std::runtime_error("append() cannot append to non-list object like " + target->typeName());
+
+	ListValueDescriptor* list = dynamic_cast<ListValueDescriptor*>(target);
+
+	ValueDescriptor* value = expression->evaluate(symbolTable);
+
+	try{
+		list->append(value);
+	} catch (...) {
+		delete value;
+		throw;
+	}
+}
+
+void AppendStatement::print () const {
+	std::cout << "append("
+		  << variableName
+		  << ", ";
+	expression->print();
+	std::cout << ")\n";
 }

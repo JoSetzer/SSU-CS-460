@@ -32,6 +32,9 @@ class AssignmentStatement final : public Statement {
 public:
     AssignmentStatement(std::string variableName,
                         ExprNode *expression);
+    AssignmentStatement(std::string variableName,
+                        ExprNode *index,
+			ExprNode *expression);
     ~AssignmentStatement() override;
 
     void evaluate(SymbolTable &symbolTable) const override;
@@ -39,6 +42,7 @@ public:
 
 private:
     std::string variableName;
+    ExprNode *indexExpression = nullptr;
     ExprNode *expression;
 };
 
@@ -126,6 +130,17 @@ class IfStatement final : public Statement {
     ElseStatement *elseStatement;
 };
 
+class AppendStatement final : public Statement {
+    public:
+    AppendStatement(std::string variableName, ExprNode* expression);
+    ~AppendStatement() override;
 
+    void evaluate(SymbolTable& symbolTable) const override;
+    void print() const override;
+
+    private:
+    std::string variableName;
+    ExprNode* expression;
+};
 
 #endif // EXPRINTER_STATEMENTS_HPP
